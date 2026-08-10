@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [draggedProductId, setDraggedProductId] = useState<number | null>(null);
 
+  const [isSaving, setIsSaving] = useState(false);
   // Form States
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -97,7 +98,7 @@ export default function AdminDashboard() {
     );
   };
 
-  const [isSaving, setIsSaving] = useState(false);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
