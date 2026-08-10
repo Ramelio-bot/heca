@@ -275,7 +275,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     setSearchQuery("");
   };
 
-  if (!isLoaded) return null;
+  // if (!isLoaded) return null; // Removed to prevent React #310 hydration crash
 
   return (
     <ProductContext.Provider value={{
