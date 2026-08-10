@@ -686,18 +686,7 @@ export default function AdminDashboard() {
           </button>
         </form>
 
-        <button 
-          onClick={() => {
-            if (window.confirm("Are you sure you want to reset all products and slides to demo data? This will erase your current items and cannot be undone.")) {
-              localStorage.removeItem("heca_products");
-              localStorage.removeItem("heca_slides");
-              window.location.reload();
-            }
-          }}
-          className="text-[10px] uppercase tracking-widest text-[#D6001C] hover:opacity-60 transition-opacity border-b border-[#D6001C]/30 pb-1"
-        >
-          Danger: Factory Reset to Demo Data
-        </button>
+        {/* Reset button removed for Supabase integration */}
       </div>
 
       {/* Toast Notification */}
