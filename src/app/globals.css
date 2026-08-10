@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-heca-bg: #EBE6DF;
+  --color-heca-primary: #111111;
+  --color-heca-accent: #C2B8AD;
+  
+  --font-serif: var(--font-bodoni-moda);
+  --font-sans: var(--font-inter);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-heca-bg);
+  color: var(--color-heca-primary);
+  scroll-behavior: smooth;
+  font-family: var(--font-sans), sans-serif;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
