@@ -11,7 +11,7 @@ export default function AdminLogin() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const currentPasscode = localStorage.getItem("heca_admin_passcode") || "admin123";
+    const currentPasscode = localStorage.getItem("heca_admin_passcode") || "Heca9901";
     if (password === currentPasscode) {
       const sessionData = {
         auth: true,
