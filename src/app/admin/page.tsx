@@ -97,59 +97,68 @@ export default function AdminDashboard() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !price || !image || sizes.length === 0) return alert("Please fill all fields");
 
-    if (editingProductId !== null) {
-      updateProduct(editingProductId, {
-        name,
-        price: parseInt(price),
-        displayPrice: `$${price}`,
-        image,
-        category,
-        subCategory,
-        sizes,
-        isNew,
-        discountPercent,
-        description,
-        material,
-        careInstructions,
-        shopeeUrl,
-        tokopediaUrl,
-        tiktokUrl,
-        hoverImage,
-        videoUrl,
-        sizeGuideUrl,
-        gallery: gallery.filter(g => g.trim() !== ""),
-      });
-      showToast("Product updated successfully");
-    } else {
-      addProduct({
-        name,
-        price: parseInt(price),
-        displayPrice: `$${price}`,
-        image,
-        category,
-        subCategory,
-        sizes,
-        isNew,
-        discountPercent,
-        description,
-        material,
-        careInstructions,
-        shopeeUrl,
-        tokopediaUrl,
-        tiktokUrl,
-        hoverImage,
-        videoUrl,
-        sizeGuideUrl,
-        gallery: gallery.filter(g => g.trim() !== ""),
-      });
-      showToast("Product added successfully");
+    setIsSaving(true);
+    try {
+      if (editingProductId !== null) {
+        await updateProduct(editingProductId, {
+          name,
+          price: parseInt(price),
+          displayPrice: `$${price}`,
+          image,
+          category,
+          subCategory,
+          sizes,
+          isNew,
+          discountPercent,
+          description,
+          material,
+          careInstructions,
+          shopeeUrl,
+          tokopediaUrl,
+          tiktokUrl,
+          hoverImage,
+          videoUrl,
+          sizeGuideUrl,
+          gallery: gallery.filter(g => g.trim() !== ""),
+        });
+        showToast("Product updated successfully");
+      } else {
+        await addProduct({
+          name,
+          price: parseInt(price),
+          displayPrice: `$${price}`,
+          image,
+          category,
+          subCategory,
+          sizes,
+          isNew,
+          discountPercent,
+          description,
+          material,
+          careInstructions,
+          shopeeUrl,
+          tokopediaUrl,
+          tiktokUrl,
+          hoverImage,
+          videoUrl,
+          sizeGuideUrl,
+          gallery: gallery.filter(g => g.trim() !== ""),
+        });
+        showToast("Product added successfully");
+      }
+      resetForm();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save product to Supabase. Check console.");
+    } finally {
+      setIsSaving(false);
     }
-
-    resetForm();
   };
 
   const resetForm = () => {
@@ -412,8 +421,8 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <button type="submit" className="w-full bg-heca-primary text-heca-bg py-4 text-xs uppercase tracking-[0.2em] hover:bg-heca-primary/90 mt-4">
-              {editingProductId ? "Update Product" : "Publish Product"}
+            <button type="submit" disabled={isSaving} className="w-full bg-heca-primary text-heca-bg py-4 text-xs uppercase tracking-[0.2em] hover:bg-heca-primary/90 mt-4 disabled:opacity-50">
+              {isSaving ? "Saving..." : (editingProductId ? "Update Product" : "Publish Product")}
             </button>
           </form>
         </div>
