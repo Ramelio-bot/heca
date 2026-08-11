@@ -6,105 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { useProduct } from "@/context/ProductContext";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
-const CATEGORIES = [
-  {
-    name: "WOMAN",
-    sections: [
-      {
-        title: "NEW IN",
-        links: [
-          { label: "THE NEW", value: "THE NEW" },
-          { label: "THE ITEM", value: null },
-          { label: "SPECIAL PRICES", value: "SPECIAL PRICES" }
-        ]
-      },
-      {
-        title: "COLLECTION",
-        links: [
-          { label: "DRESSES", value: "DRESSES" },
-          { label: "TOPS | BODIES", value: "TOPS | BODIES" },
-          { label: "T-SHIRTS", value: "T-SHIRTS" },
-          { label: "SHIRTS", value: "SHIRTS" },
-          { label: "TROUSERS", value: "TROUSERS" },
-          { label: "SHORTS | BERMUDAS", value: "SHORTS | BERMUDAS" },
-          { label: "CARDIGANS | SWEATERS", value: "CARDIGANS | SWEATERS" },
-          { label: "CO-ORD SETS", value: "CO-ORD SETS" },
-          { label: "JEANS", value: "JEANS" },
-          { label: "SKIRTS", value: "SKIRTS" },
-          { label: "JACKETS", value: "JACKETS" }
-        ]
-      }
-    ]
-  },
-  {
-    name: "MAN",
-    sections: [
-      {
-        title: "NEW IN",
-        links: [
-          { label: "THE NEW", value: "THE NEW" },
-          { label: "THE ITEM", value: null },
-          { label: "SPECIAL PRICES", value: "SPECIAL PRICES" }
-        ]
-      },
-      {
-        title: "COLLECTION",
-        links: [
-          { label: "T-SHIRTS", value: "T-SHIRTS" },
-          { label: "SHIRTS", value: "SHIRTS" },
-          { label: "TROUSERS", value: "TROUSERS" },
-          { label: "SHORTS | BERMUDAS", value: "SHORTS | BERMUDAS" },
-          { label: "JACKETS", value: "JACKETS" }
-        ]
-      }
-    ]
-  },
-  {
-    name: "KIDS",
-    sections: [
-      {
-        title: "NEW IN",
-        links: [
-          { label: "THE NEW", value: "THE NEW" },
-          { label: "THE ITEM", value: null },
-          { label: "SPECIAL PRICES", value: "SPECIAL PRICES" }
-        ]
-      },
-      {
-        title: "COLLECTION",
-        links: [
-          { label: "T-SHIRTS", value: "T-SHIRTS" },
-          { label: "TROUSERS", value: "TROUSERS" }
-        ]
-      }
-    ]
-  },
-  {
-    name: "BEAUTY",
-    sections: [
-      {
-        title: "COLLECTION",
-        links: [
-          { label: "MAKEUP", value: "MAKEUP" },
-          { label: "SKINCARE", value: "SKINCARE" },
-          { label: "FRAGRANCE", value: "FRAGRANCE" }
-        ]
-      }
-    ]
-  },
-  {
-    name: "COLLECTION",
-    sections: [
-      {
-        title: "ALL",
-        links: [
-          { label: "VIEW ALL", value: null }
-        ]
-      }
-    ]
-  }
-];
+import { useMemo } from "react";
 
 const THUMBNAILS = [
   { label: "THE NEW", filter: "THE NEW", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80" },
@@ -121,6 +23,51 @@ export default function NavigationDrawer() {
   const [localSearchQuery, setLocalSearchQuery] = useState("");
   const router = useRouter();
 
+  const CATEGORIES = useMemo(() => {
+    const catsMap = new Map<string, string[]>();
+    products.forEach(p => {
+      const c = p.category.toUpperCase();
+      const s = p.subCategory.toUpperCase();
+      if (!catsMap.has(c)) catsMap.set(c, []);
+      if (!catsMap.get(c)!.includes(s)) catsMap.get(c)!.push(s);
+    });
+
+    const dynamicCategories = Array.from(catsMap.entries()).map(([catName, subCats]) => {
+      return {
+        name: catName,
+        sections: [
+          {
+            title: "NEW IN",
+            links: [
+              { label: "THE NEW", value: "THE NEW" },
+              { label: "THE ITEM", value: null },
+              { label: "SPECIAL PRICES", value: "SPECIAL PRICES" }
+            ]
+          },
+          {
+            title: "COLLECTION",
+            links: subCats.map(sub => ({ label: sub, value: sub }))
+          }
+        ]
+      };
+    });
+
+    // Add ALL COLLECTION at the end
+    dynamicCategories.push({
+      name: "COLLECTION",
+      sections: [
+        {
+          title: "ALL",
+          links: [
+            { label: "VIEW ALL", value: null }
+          ]
+        }
+      ]
+    });
+
+    return dynamicCategories;
+  }, [products]);
+
   if (!isNavOpen) return null;
   const handleClose = () => {
     setNavOpen(false);
@@ -130,7 +77,6 @@ export default function NavigationDrawer() {
     setNavOpen(false);
     router.push("/admin/login");
   };
-
 
   const handleSubCategoryClick = (cat: string, subCategory: string | null) => {
     setActiveCategory(cat);
@@ -264,9 +210,9 @@ export default function NavigationDrawer() {
                   activeCategory === category.name ? "max-h-[1000px] opacity-100 mt-8 mb-12" : "max-h-0 opacity-0 mt-0 mb-0"
                 }`}
               >
-                <div className="flex flex-col md:flex-row gap-12 md:gap-24 pl-4 md:pl-12">
+                <div className="flex flex-col lg:flex-row gap-8 lg:gap-24 pl-4 lg:pl-12">
                   {category.sections.map((section, sIdx) => (
-                    <div key={sIdx} className="flex flex-col gap-6 md:flex-row md:gap-12">
+                    <div key={sIdx} className="flex flex-col gap-4 lg:flex-row lg:gap-12">
                       <div className="text-heca-primary/50 whitespace-nowrap text-[11px] font-sans tracking-widest uppercase mt-1">
                         | 0{sIdx + 1} | {section.title}
                       </div>

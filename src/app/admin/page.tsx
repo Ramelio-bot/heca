@@ -65,7 +65,9 @@ export default function AdminDashboard() {
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [category, setCategory] = useState("WOMAN");
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [subCategory, setSubCategory] = useState("DRESSES");
+  const [isAddingSubCategory, setIsAddingSubCategory] = useState(false);
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
   const [hoverImage, setHoverImage] = useState("");
@@ -344,17 +346,97 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex-1 flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+              <div className="flex-1 flex flex-col space-y-2 text-[10px] uppercase tracking-widest relative">
                 <label className="opacity-60">Category</label>
-                <select value={category} onChange={e => setCategory(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs">
-                  <option value="WOMAN">WOMAN</option>
-                  <option value="MAN">MAN</option>
-                  <option value="KIDS">KIDS</option>
-                </select>
+                {isAddingCategory ? (
+                  <input 
+                    type="text"
+                    autoFocus
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs uppercase"
+                    placeholder="PRESS ENTER TO SAVE..."
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (e.currentTarget.value.trim()) {
+                          setCategory(e.currentTarget.value.trim().toUpperCase());
+                        }
+                        setIsAddingCategory(false);
+                      } else if (e.key === 'Escape') {
+                        setIsAddingCategory(false);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (e.currentTarget.value.trim()) {
+                        setCategory(e.currentTarget.value.trim().toUpperCase());
+                      }
+                      setIsAddingCategory(false);
+                    }}
+                  />
+                ) : (
+                  <select 
+                    value={category} 
+                    onChange={e => {
+                      if (e.target.value === "ADD_NEW") {
+                        setIsAddingCategory(true);
+                      } else {
+                        setCategory(e.target.value);
+                      }
+                    }} 
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs uppercase" 
+                  >
+                    <option value="" disabled>Select Category</option>
+                    {Array.from(new Set([...products.map(p => p.category), category])).filter(Boolean).map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                    <option value="ADD_NEW" className="font-bold">+ ADD NEW CATEGORY...</option>
+                  </select>
+                )}
               </div>
-              <div className="flex-1 flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+              <div className="flex-1 flex flex-col space-y-2 text-[10px] uppercase tracking-widest relative">
                 <label className="opacity-60">Sub-Category</label>
-                <input type="text" value={subCategory} onChange={e => setSubCategory(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="e.g. DRESSES" />
+                {isAddingSubCategory ? (
+                  <input 
+                    type="text"
+                    autoFocus
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs uppercase"
+                    placeholder="PRESS ENTER TO SAVE..."
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (e.currentTarget.value.trim()) {
+                          setSubCategory(e.currentTarget.value.trim().toUpperCase());
+                        }
+                        setIsAddingSubCategory(false);
+                      } else if (e.key === 'Escape') {
+                        setIsAddingSubCategory(false);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (e.currentTarget.value.trim()) {
+                        setSubCategory(e.currentTarget.value.trim().toUpperCase());
+                      }
+                      setIsAddingSubCategory(false);
+                    }}
+                  />
+                ) : (
+                  <select 
+                    value={subCategory} 
+                    onChange={e => {
+                      if (e.target.value === "ADD_NEW") {
+                        setIsAddingSubCategory(true);
+                      } else {
+                        setSubCategory(e.target.value);
+                      }
+                    }} 
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs uppercase" 
+                  >
+                    <option value="" disabled>Select Sub-Category</option>
+                    {Array.from(new Set([...products.filter(p => p.category === category).map(p => p.subCategory), subCategory])).filter(Boolean).map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                    <option value="ADD_NEW" className="font-bold">+ ADD NEW SUB-CATEGORY...</option>
+                  </select>
+                )}
               </div>
             </div>
 

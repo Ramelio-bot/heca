@@ -50,6 +50,8 @@ export const metadata: Metadata = {
   },
 };
 
+import SplashScreen from "@/components/SplashScreen";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -58,6 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${bodoniModa.variable}`}>
       <body className="antialiased font-sans bg-heca-bg text-heca-primary">
+        <SplashScreen />
         <ProductProvider>
           <CartProvider>
             {children}
