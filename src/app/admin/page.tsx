@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProduct, ProductSize, Product, HeroSlide } from "@/context/ProductContext";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "next/link";import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -14,6 +14,53 @@ export default function AdminDashboard() {
   const [draggedProductId, setDraggedProductId] = useState<number | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileUpload = async (file: File): Promise<string | null> => {
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('heca-media')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('heca-media')
+        .getPublicUrl(fileName);
+
+      return data.publicUrl;
+    } catch (error: any) {
+      alert("Error uploading file: " + error.message);
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const FileUploader = ({ onUpload, accept = "image/*", label = "Upload File" }: { onUpload: (url: string) => void, accept?: string, label?: string }) => (
+    <div className="relative mt-2">
+      <input 
+        type="file" 
+        accept={accept}
+        disabled={isUploading}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const url = await handleFileUpload(file);
+            if (url) onUpload(url);
+          }
+        }}
+      />
+      <div className={`w-full py-2 border border-dashed border-heca-primary/30 text-center text-[10px] uppercase tracking-widest ${isUploading ? 'opacity-50' : 'hover:bg-heca-primary/5'} transition-colors`}>
+        {isUploading ? "Uploading..." : label}
+      </div>
+    </div>
+  );
   // Form States
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -319,24 +366,25 @@ export default function AdminDashboard() {
             <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
               <label className="opacity-60">Image URL</label>
               <input type="text" value={image} onChange={e => setImage(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://images.unsplash.com/..." />
+              <FileUploader onUpload={setImage} label="Or Upload Image" />
             </div>
 
             <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
               <label className="opacity-60">Hover Image URL (Optional)</label>
               <input type="text" value={hoverImage} onChange={e => setHoverImage(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://images.unsplash.com/..." />
+              <FileUploader onUpload={setHoverImage} label="Or Upload Hover Image" />
             </div>
 
             <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
-              <label className="opacity-60 flex justify-between">
-                <span>Product Catwalk Video URL (Optional MP4)</span>
-                <span className="opacity-50 lowercase normal-case text-[9px]">*Recommended: &lt; 10MB .mp4 for optimal mobile performance</span>
-              </label>
+              <label className="opacity-60">Product Catwalk Video URL (Optional MP4) <span className="lowercase opacity-50 ml-2">*Recommended: &lt; 10MB .mp4 for optimal mobile performance</span></label>
               <input type="text" value={videoUrl} onChange={e => setVideoUrl(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://example.com/video.mp4" />
+              <FileUploader onUpload={setVideoUrl} accept="video/mp4,video/webm" label="Or Upload Video" />
             </div>
 
             <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
               <label className="opacity-60">Custom Size Guide Image URL (Optional)</label>
               <input type="text" value={sizeGuideUrl} onChange={e => setSizeGuideUrl(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://example.com/sizeguide.jpg" />
+              <FileUploader onUpload={setSizeGuideUrl} label="Or Upload Size Guide" />
             </div>
 
             <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
@@ -345,19 +393,33 @@ export default function AdminDashboard() {
                 <button type="button" onClick={() => setGallery([...gallery, ""])} className="text-heca-primary font-bold border-b border-heca-primary">+ Add Picture</button>
               </label>
               {gallery.map((g, idx) => (
-                <div key={idx} className="flex items-center space-x-2">
-                  <input 
-                    type="text" 
-                    value={g} 
-                    onChange={e => {
+                <div key={idx} className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="text" 
+                      value={g} 
+                      onChange={e => {
+                        const newG = [...gallery];
+                        newG[idx] = e.target.value;
+                        setGallery(newG);
+                      }} 
+                      className="w-full border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" 
+                      placeholder="https://images.unsplash.com/..." 
+                    />
+                    <button type="button" onClick={() => {
                       const newG = [...gallery];
-                      newG[idx] = e.target.value;
+                      newG.splice(idx, 1);
+                      setGallery(newG);
+                    }} className="text-[#D6001C] px-2">X</button>
+                  </div>
+                  <FileUploader 
+                    onUpload={(url) => {
+                      const newG = [...gallery];
+                      newG[idx] = url;
                       setGallery(newG);
                     }} 
-                    className="flex-1 border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" 
-                    placeholder="https://images.unsplash.com/..." 
+                    label="Upload Picture" 
                   />
-                  <button type="button" onClick={() => setGallery(gallery.filter((_, i) => i !== idx))} className="text-xs opacity-50 hover:opacity-100">✕</button>
                 </div>
               ))}
             </div>
@@ -603,6 +665,7 @@ export default function AdminDashboard() {
               <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
                 <label className="opacity-60">Media URL (.mp4 or image)</label>
                 <input type="text" value={slideUrl} onChange={e => setSlideUrl(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://..." />
+                <FileUploader onUpload={setSlideUrl} accept="image/*,video/mp4,video/webm" label="Or Upload Media" />
               </div>
 
               <button type="submit" className="w-full bg-heca-primary text-heca-bg py-4 text-xs uppercase tracking-[0.2em] hover:bg-heca-primary/90 mt-4">
