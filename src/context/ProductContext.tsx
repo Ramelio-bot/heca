@@ -165,7 +165,6 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       } catch {}
     }
 
-    setIsLoaded(true);
   }, []);
 
   const addProduct = async (newProduct: Omit<Product, "id">) => {
