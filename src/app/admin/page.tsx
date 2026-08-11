@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   const [isAuth, setIsAuth] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [draggedProductId, setDraggedProductId] = useState<number | null>(null);
-  const { formatPrice } = useCart();
+  const { currency, setCurrency, formatPrice } = useCart();
 
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -160,8 +160,8 @@ export default function AdminDashboard() {
       if (editingProductId !== null) {
         await updateProduct(editingProductId, {
           name,
-          price: parseInt(price),
-          displayPrice: `$${price}`,
+          price: Math.round(Number(price)),
+          displayPrice: `$${Math.round(Number(price))}`,
           image,
           category,
           subCategory,
@@ -183,8 +183,8 @@ export default function AdminDashboard() {
       } else {
         await addProduct({
           name,
-          price: parseInt(price),
-          displayPrice: `$${price}`,
+          price: Math.round(Number(price)),
+          displayPrice: `$${Math.round(Number(price))}`,
           image,
           category,
           subCategory,
@@ -443,8 +443,25 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
-              <label className="opacity-60">Price (USD)</label>
-              <input type="number" value={price} onChange={e => setPrice(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="e.g. 290" />
+              <label className="opacity-60 flex justify-between">
+                <span>Price ({currency})</span>
+                <div className="flex gap-2 text-[9px]">
+                  <button type="button" onClick={() => setCurrency("USD")} className={currency === "USD" ? "font-bold text-heca-primary" : "opacity-50 hover:opacity-100"}>USD</button>
+                  <span className="opacity-30">|</span>
+                  <button type="button" onClick={() => setCurrency("IDR")} className={currency === "IDR" ? "font-bold text-heca-primary" : "opacity-50 hover:opacity-100"}>IDR</button>
+                </div>
+              </label>
+              <input 
+                type="number" 
+                value={price ? (currency === 'USD' ? price : Math.round(Number(price) * 15500)).toString() : ""} 
+                onChange={e => {
+                  const val = e.target.value;
+                  if (!val) setPrice("");
+                  else setPrice(currency === 'USD' ? val : (Number(val) / 15500).toString());
+                }} 
+                className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" 
+                placeholder={currency === 'USD' ? "e.g. 290" : "e.g. 4495000"} 
+              />
             </div>
 
             <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
