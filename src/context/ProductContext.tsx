@@ -76,6 +76,7 @@ const DEFAULT_HERO_SLIDES: HeroSlide[] = [
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 // Helper to map Supabase row to Product interface
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapRowToProduct = (row: any): Product => ({
   id: row.id,
   name: row.name,
@@ -92,6 +93,7 @@ const mapRowToProduct = (row: any): Product => ({
 
 // Helper to map Product interface to Supabase row
 const mapProductToRow = (p: Partial<Product>) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const row: any = {};
   if (p.name !== undefined) row.name = p.name;
   if (p.price !== undefined) row.price = p.price;
@@ -119,7 +121,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     spotify: "https://spotify.com/user/heca.official",
     clientService: "mailto:care@heca.com",
   });
-  const [isLoaded, setIsLoaded] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchProducts = async () => {
@@ -139,6 +141,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line
     fetchProducts();
 
     // Local Storage for Slides
