@@ -9,7 +9,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 
 export default function AntiGravityHero() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { setNavOpen, setIsHelpOpen } = useCart();
+  const { setNavOpen, setIsHelpOpen, currency, setCurrency } = useCart();
   const { heroSlides, searchQuery, setSearchQuery } = useProduct();
   const router = useRouter();
   
@@ -125,6 +125,24 @@ export default function AntiGravityHero() {
               className="bg-transparent outline-none w-full placeholder:text-current placeholder:uppercase"
             />
           </div>
+          
+          {/* Currency Toggle */}
+          <div className="flex gap-2 items-center text-[10px] uppercase tracking-widest mb-2">
+            <button 
+              onClick={() => setCurrency("USD")} 
+              className={`transition-all ${currency === "USD" ? "opacity-100 font-bold scale-110" : "opacity-50 hover:opacity-100"}`}
+            >
+              USD
+            </button>
+            <span className="opacity-30 mx-1">|</span>
+            <button 
+              onClick={() => setCurrency("IDR")} 
+              className={`transition-all ${currency === "IDR" ? "opacity-100 font-bold scale-110" : "opacity-50 hover:opacity-100"}`}
+            >
+              IDR
+            </button>
+          </div>
+
           <div className="flex gap-2">
             <button onClick={handleLoginClick} className="hover:opacity-60 transition-opacity uppercase tracking-widest z-30 cursor-pointer min-h-[44px] min-w-[44px] px-2 flex items-center justify-center">LOG IN</button>
             <button onClick={() => setIsHelpOpen(true)} className="hover:opacity-60 transition-opacity min-h-[44px] min-w-[44px] px-2 flex items-center justify-center -mr-2">HELP</button>

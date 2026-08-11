@@ -7,7 +7,7 @@ import { useProduct, Product, ProductSize } from "@/context/ProductContext";
 import { motion } from "framer-motion";
 
 export default function ProductCatalog() {
-  const { setIsQuickViewOpen, setSelectedProduct } = useCart();
+  const { setIsQuickViewOpen, setSelectedProduct, formatPrice } = useCart();
   const { products, activeCategory, activeSubCategory, searchQuery, setFilter } = useProduct();
   
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
@@ -190,15 +190,15 @@ export default function ProductCatalog() {
                   {product.discountPercent ? (
                     <>
                       <span className="text-xs opacity-40 font-serif line-through decoration-heca-primary/50">
-                        {product.displayPrice}
+                        {formatPrice(product.price)}
                       </span>
                       <span className="text-sm font-bold font-serif text-[#D6001C]">
-                        ${(product.price * (1 - product.discountPercent / 100)).toFixed(0)}
+                        {formatPrice(product.price * (1 - product.discountPercent / 100))}
                       </span>
                     </>
                   ) : (
                     <span className="text-sm opacity-60 font-serif">
-                      {product.displayPrice}
+                      {formatPrice(product.price)}
                     </span>
                   )}
                 </div>

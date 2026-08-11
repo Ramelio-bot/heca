@@ -6,7 +6,7 @@ import { useCart } from "@/context/CartContext";
 import SizeGuideModal from "./SizeGuideModal";
 
 export default function QuickViewDrawer() {
-  const { isQuickViewOpen, setIsQuickViewOpen, selectedProduct, setMarketplaceModalOpen } = useCart();
+  const { isQuickViewOpen, setIsQuickViewOpen, selectedProduct, setMarketplaceModalOpen, formatPrice } = useCart();
   const [isVisible, setIsVisible] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -154,7 +154,7 @@ export default function QuickViewDrawer() {
                   {selectedProduct.name}
                 </h1>
                 <p className="text-xs uppercase tracking-widest opacity-60">
-                  {selectedProduct.displayPrice}
+                  {formatPrice(selectedProduct.price)}
                 </p>
               </div>
 

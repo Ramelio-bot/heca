@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProduct, ProductSize, Product, HeroSlide } from "@/context/ProductContext";
+import { useCart } from "@/context/CartContext";
 import Image from "next/image";
 import Link from "next/link";import { supabase } from "@/lib/supabaseClient";
 
@@ -12,6 +13,7 @@ export default function AdminDashboard() {
   const [isAuth, setIsAuth] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [draggedProductId, setDraggedProductId] = useState<number | null>(null);
+  const { formatPrice } = useCart();
 
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -666,7 +668,7 @@ export default function AdminDashboard() {
                     {product.isNew && <span className="bg-heca-primary text-heca-bg px-1 py-0.5 text-[8px]">NEW</span>}
                     {product.discountPercent ? <span className="bg-[#D6001C] text-white px-1 py-0.5 text-[8px]">SALE -{product.discountPercent}%</span> : null}
                   </span>
-                  <span className="opacity-60 font-serif my-1">{product.displayPrice}</span>
+                  <span className="opacity-60 font-serif my-1">{formatPrice(product.price)}</span>
                   <span className="text-[8px] opacity-40 mb-3">{product.category} / {product.subCategory}</span>
                 </div>
               </div>

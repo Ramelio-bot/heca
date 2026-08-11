@@ -16,7 +16,7 @@ const THUMBNAILS = [
 ];
 
 export default function NavigationDrawer() {
-  const { isNavOpen, setNavOpen, setIsHelpOpen, setSelectedProduct, setIsQuickViewOpen } = useCart();
+  const { isNavOpen, setNavOpen, setIsHelpOpen, setSelectedProduct, setIsQuickViewOpen, formatPrice } = useCart();
   const { setFilter, products } = useProduct();
   const [activeCategory, setActiveCategory] = useState("WOMAN");
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -175,7 +175,7 @@ export default function NavigationDrawer() {
                       </div>
                       <div className="flex flex-col flex-1 truncate">
                         <span className="truncate">{product.name}</span>
-                        <span className="opacity-60 mt-1">{product.displayPrice}</span>
+                        <span className="opacity-60 mt-1">{formatPrice(product.price)}</span>
                       </div>
                     </button>
                   ))

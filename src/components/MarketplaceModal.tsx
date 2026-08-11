@@ -7,7 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useProduct } from "@/context/ProductContext";
 
 export default function MarketplaceModal() {
-  const { isMarketplaceModalOpen, setMarketplaceModalOpen, selectedProduct, setSelectedProduct } = useCart();
+  const { isMarketplaceModalOpen, setMarketplaceModalOpen, selectedProduct, setSelectedProduct, formatPrice } = useCart();
   const { storeLinks } = useProduct();
 
   if (!isMarketplaceModalOpen || !selectedProduct) return null;
@@ -59,15 +59,15 @@ export default function MarketplaceModal() {
               {selectedProduct.discountPercent ? (
                 <>
                   <span className="text-sm opacity-40 font-serif line-through decoration-heca-primary/50">
-                    {selectedProduct.displayPrice}
+                    {formatPrice(selectedProduct.price)}
                   </span>
                   <span className="text-xl font-bold font-serif text-[#D6001C]">
-                    ${finalPrice.toFixed(0)}
+                    {formatPrice(finalPrice)}
                   </span>
                 </>
               ) : (
                 <span className="text-xl opacity-80 font-serif">
-                  {selectedProduct.displayPrice}
+                  {formatPrice(selectedProduct.price)}
                 </span>
               )}
             </div>
