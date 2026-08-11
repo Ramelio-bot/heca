@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { useProduct, Product, ProductSize } from "@/context/ProductContext";
+import { motion } from "framer-motion";
 
 export default function ProductCatalog() {
   const { setIsQuickViewOpen, setSelectedProduct } = useCart();
@@ -97,8 +98,12 @@ export default function ProductCatalog() {
         </div>
       ) : (
         <div className="grid grid-cols-12 gap-4 md:gap-8 max-w-[1600px] mx-auto">
-          {filteredProducts.map((product) => (
-            <div 
+          {filteredProducts.map((product, i) => (
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: (i % 3) * 0.1 }}
               key={product.id} 
               className={`${product.span || "col-span-12 md:col-span-4"} group relative overflow-hidden flex flex-col cursor-pointer`}
               onMouseEnter={() => setHoveredProduct(product.id)}
@@ -112,7 +117,7 @@ export default function ProductCatalog() {
                   alt={product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  className={`object-cover object-center transition-all duration-700 group-hover:scale-105 ${
+                  className={`object-cover object-center transition-all duration-[1500ms] ease-out group-hover:scale-105 ${
                     product.hoverImage ? "group-hover:opacity-0" : ""
                   }`}
                 />
@@ -125,7 +130,7 @@ export default function ProductCatalog() {
                     loop
                     muted
                     playsInline
-                    className="object-cover object-center absolute inset-0 w-full h-full opacity-0 transition-all duration-700 group-hover:opacity-100 group-hover:scale-105"
+                    className="object-cover object-center absolute inset-0 w-full h-full opacity-0 transition-all duration-[1500ms] ease-out group-hover:opacity-100 group-hover:scale-105"
                   />
                 ) : product.hoverImage ? (
                   <Image
@@ -133,7 +138,7 @@ export default function ProductCatalog() {
                     alt={`${product.name} alternate view`}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover object-center absolute inset-0 opacity-0 transition-all duration-700 group-hover:opacity-100 group-hover:scale-105"
+                    className="object-cover object-center absolute inset-0 opacity-0 transition-all duration-[1500ms] ease-out group-hover:opacity-100 group-hover:scale-105"
                   />
                 ) : null}
 
@@ -198,7 +203,7 @@ export default function ProductCatalog() {
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

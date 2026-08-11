@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { useProduct } from "@/context/ProductContext";
 import { useRouter } from "next/navigation";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 export default function AntiGravityHero() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -12,11 +13,13 @@ export default function AntiGravityHero() {
   const { heroSlides, searchQuery, setSearchQuery } = useProduct();
   const router = useRouter();
   
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 1000], [0, 400]);
+
   const handleLoginClick = () => {
     setNavOpen(false);
     router.push("/admin/login");
   };
-
 
   const handleNext = () => {
     if (heroSlides.length === 0) return;
@@ -41,10 +44,10 @@ export default function AntiGravityHero() {
   return (
     <div className="relative w-full h-screen bg-[#EBE6DF] overflow-hidden">
       
-      {/* Horizontal Slider */}
-      <div 
+      {/* Horizontal Slider with Parallax */}
+      <motion.div 
         className="absolute inset-0 flex transition-transform duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        style={{ transform: `translateX(-${currentIndex * 100}%)`, y }}
       >
         {heroSlides.length === 0 && (
           <div className="w-full h-full bg-[#EBE6DF]"></div>
@@ -72,7 +75,7 @@ export default function AntiGravityHero() {
             )}
           </div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Massive Brand Logo Overlay */}
       <div className="absolute bottom-[-2vh] md:bottom-[-4vh] right-4 md:right-8 z-20 pointer-events-none mix-blend-difference opacity-90">
