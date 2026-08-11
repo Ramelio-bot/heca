@@ -58,7 +58,7 @@ export default function AntiGravityHero() {
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover object-top md:object-[center_15%]"
               />
             ) : (
               <Image
@@ -66,7 +66,7 @@ export default function AntiGravityHero() {
                 alt={`Heca Editorial ${index + 1}`}
                 fill
                 priority={index === currentIndex || index === 0}
-                className="object-cover object-center"
+                className="object-cover object-top md:object-[center_15%]"
                 sizes="100vw"
               />
             )}
