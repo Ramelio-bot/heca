@@ -6,7 +6,10 @@ export default function SplashScreen() {
   const [stage, setStage] = useState<"initial" | "fade-in" | "expand" | "slide-up" | "done">("initial");
 
   useEffect(() => {
-    // Sequence of animations
+    if (typeof window !== "undefined" && localStorage.getItem("heca_splash_seen")) {
+      setStage("done");
+      return;
+    }
 
     // Sequence of animations
     const sequence = async () => {
@@ -25,7 +28,7 @@ export default function SplashScreen() {
       // 4. Unmount completely
       await new Promise(r => setTimeout(r, 1000));
       setStage("done");
-      sessionStorage.setItem("heca_splash_seen", "true");
+      localStorage.setItem("heca_splash_seen", "true");
     };
 
     sequence();

@@ -28,6 +28,7 @@ export interface Product {
   gallery?: string[];
   videoUrl?: string;
   sizeGuideUrl?: string;
+  sortOrder?: number;
 }
 
 export interface StoreLinks {
@@ -57,12 +58,12 @@ interface ProductContextType {
   updateProduct: (id: number, product: Partial<Product>) => Promise<void>;
   deleteProduct: (id: number) => Promise<void>;
   bulkDeleteProducts: (ids: number[]) => Promise<void>;
-  reorderProduct: (draggedId: number, targetId: number) => void;
-  addHeroSlide: (slide: Omit<HeroSlide, "id">) => void;
-  updateHeroSlide: (id: number, slide: Partial<HeroSlide>) => void;
-  deleteHeroSlide: (id: number) => void;
-  reorderHeroSlide: (draggedId: number, targetId: number) => void;
-  updateStoreLinks: (links: StoreLinks) => void;
+  reorderProduct: (draggedId: number, targetId: number) => void | Promise<void>;
+  addHeroSlide: (slide: Omit<HeroSlide, "id">) => void | Promise<void>;
+  updateHeroSlide: (id: number, slide: Partial<HeroSlide>) => void | Promise<void>;
+  deleteHeroSlide: (id: number) => void | Promise<void>;
+  reorderHeroSlide: (draggedId: number, targetId: number) => void | Promise<void>;
+  updateStoreLinks: (links: StoreLinks) => void | Promise<void>;
   setFilter: (category: string, subCategory: string | null) => void;
   setSearchQuery: (query: string) => void;
 }
@@ -83,12 +84,24 @@ const mapRowToProduct = (row: any): Product => ({
   price: Number(row.price),
   displayPrice: row.display_price,
   image: row.images?.[0] || "",
+  hoverImage: row.hover_image || undefined,
+  gallery: row.images,
   category: row.category,
   subCategory: row.sub_category || "",
-  sizes: ["S", "M", "L"], // default sizes as we didn't add this column yet
-  gallery: row.images,
+  sizes: row.sizes?.length ? row.sizes : ["S", "M", "L"],
+  isNew: !!row.is_new,
+  discountPercent: Number(row.discount_percent ?? 0),
   span: row.span || "col-span-12 md:col-span-4",
   height: row.height || "h-[60vh]",
+  description: row.description || undefined,
+  material: row.material || undefined,
+  careInstructions: row.care_instructions || undefined,
+  shopeeUrl: row.shopee_url || undefined,
+  tokopediaUrl: row.tokopedia_url || undefined,
+  tiktokUrl: row.tiktok_url || undefined,
+  videoUrl: row.video_url || undefined,
+  sizeGuideUrl: row.size_guide_url || undefined,
+  sortOrder: row.sort_order ?? 0,
 });
 
 // Helper to map Product interface to Supabase row
@@ -100,6 +113,19 @@ const mapProductToRow = (p: Partial<Product>) => {
   if (p.displayPrice !== undefined) row.display_price = p.displayPrice;
   if (p.category !== undefined) row.category = p.category;
   if (p.subCategory !== undefined) row.sub_category = p.subCategory;
+  if (p.sizes !== undefined) row.sizes = p.sizes;
+  if (p.isNew !== undefined) row.is_new = p.isNew;
+  if (p.discountPercent !== undefined) row.discount_percent = p.discountPercent;
+  if (p.hoverImage !== undefined) row.hover_image = p.hoverImage;
+  if (p.description !== undefined) row.description = p.description;
+  if (p.material !== undefined) row.material = p.material;
+  if (p.careInstructions !== undefined) row.care_instructions = p.careInstructions;
+  if (p.shopeeUrl !== undefined) row.shopee_url = p.shopeeUrl;
+  if (p.tokopediaUrl !== undefined) row.tokopedia_url = p.tokopediaUrl;
+  if (p.tiktokUrl !== undefined) row.tiktok_url = p.tiktokUrl;
+  if (p.videoUrl !== undefined) row.video_url = p.videoUrl;
+  if (p.sizeGuideUrl !== undefined) row.size_guide_url = p.sizeGuideUrl;
+  if (p.sortOrder !== undefined) row.sort_order = p.sortOrder;
   if (p.gallery) row.images = p.gallery;
   else if (p.image) row.images = [p.image];
   if (p.span !== undefined) row.span = p.span;
@@ -129,7 +155,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from('heca_products')
         .select('*')
-        .order('id', { ascending: false });
+        .order('sort_order', { ascending: true });
       
       if (error) throw error;
       if (data) {
@@ -140,31 +166,44 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  useEffect(() => {
-    // eslint-disable-next-line
-    fetchProducts();
-
-    // Local Storage for Slides
-    const storedSlides = localStorage.getItem("heca_hero_slides");
-    if (storedSlides) {
-      try {
-        setHeroSlides(JSON.parse(storedSlides));
-      } catch {
+  const fetchHeroSlides = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('heca_hero_slides')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setHeroSlides(data);
+      } else {
         setHeroSlides(DEFAULT_HERO_SLIDES);
       }
-    } else {
+    } catch (err) {
+      console.error("Error fetching hero slides from Supabase:", err);
       setHeroSlides(DEFAULT_HERO_SLIDES);
-      localStorage.setItem("heca_hero_slides", JSON.stringify(DEFAULT_HERO_SLIDES));
     }
+  };
 
-    // Local Storage for Links
-    const storedLinks = localStorage.getItem("heca_store_links");
-    if (storedLinks) {
-      try {
-        setStoreLinks(JSON.parse(storedLinks));
-      } catch {}
+  const fetchStoreLinks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('heca_settings')
+        .select('*')
+        .eq('key', 'store_links')
+        .single();
+      if (error) throw error;
+      if (data && data.value) {
+        setStoreLinks(data.value as StoreLinks);
+      }
+    } catch (err) {
+      console.error("Error fetching store links from Supabase:", err);
     }
+  };
 
+  useEffect(() => {
+    fetchProducts();
+    fetchHeroSlides();
+    fetchStoreLinks();
   }, []);
 
   const addProduct = async (newProduct: Omit<Product, "id">) => {
@@ -224,8 +263,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     setProducts(prev => prev.filter(p => !ids.includes(p.id)));
   };
 
-  // Reordering local only for now since we didn't add order col
-  const reorderProduct = (draggedId: number, targetId: number) => {
+  const reorderProduct = async (draggedId: number, targetId: number) => {
     const draggedIdx = products.findIndex(p => p.id === draggedId);
     const targetIdx = products.findIndex(p => p.id === targetId);
     if (draggedIdx < 0 || targetIdx < 0 || draggedIdx === targetIdx) return;
@@ -233,29 +271,63 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     const [draggedItem] = newProducts.splice(draggedIdx, 1);
     newProducts.splice(targetIdx, 0, draggedItem);
     setProducts(newProducts);
+
+    try {
+      const updates = newProducts.map((p, idx) =>
+        supabase.from('heca_products').update({ sort_order: idx + 1 }).eq('id', p.id)
+      );
+      await Promise.all(updates);
+    } catch (err) {
+      console.error("Error updating sort_order in Supabase:", err);
+    }
   };
 
-  const addHeroSlide = (newSlide: Omit<HeroSlide, "id">) => {
-    const newId = heroSlides.length > 0 ? Math.max(...heroSlides.map(s => s.id)) + 1 : 1;
-    const added: HeroSlide = { ...newSlide, id: newId };
-    const updated = [...heroSlides, added];
-    setHeroSlides(updated);
-    localStorage.setItem("heca_hero_slides", JSON.stringify(updated));
+  const addHeroSlide = async (newSlide: Omit<HeroSlide, "id">) => {
+    const nextSortOrder = heroSlides.length + 1;
+    const { data, error } = await supabase
+      .from('heca_hero_slides')
+      .insert([{
+        type: newSlide.type,
+        url: newSlide.url,
+        sort_order: nextSortOrder,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error adding hero slide to Supabase:", error);
+      return;
+    }
+    if (data) {
+      setHeroSlides(prev => [...prev, data]);
+    }
   };
 
-  const deleteHeroSlide = (id: number) => {
-    const updated = heroSlides.filter(s => s.id !== id);
-    setHeroSlides(updated);
-    localStorage.setItem("heca_hero_slides", JSON.stringify(updated));
+  const deleteHeroSlide = async (id: number) => {
+    const { error } = await supabase
+      .from('heca_hero_slides')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      console.error("Error deleting hero slide from Supabase:", error);
+      return;
+    }
+    setHeroSlides(prev => prev.filter(s => s.id !== id));
   };
 
-  const updateHeroSlide = (id: number, updatedFields: Partial<HeroSlide>) => {
-    const updated = heroSlides.map(s => s.id === id ? { ...s, ...updatedFields } : s);
-    setHeroSlides(updated);
-    localStorage.setItem("heca_hero_slides", JSON.stringify(updated));
+  const updateHeroSlide = async (id: number, updatedFields: Partial<HeroSlide>) => {
+    const { error } = await supabase
+      .from('heca_hero_slides')
+      .update(updatedFields)
+      .eq('id', id);
+    if (error) {
+      console.error("Error updating hero slide in Supabase:", error);
+      return;
+    }
+    setHeroSlides(prev => prev.map(s => s.id === id ? { ...s, ...updatedFields } : s));
   };
 
-  const reorderHeroSlide = (draggedId: number, targetId: number) => {
+  const reorderHeroSlide = async (draggedId: number, targetId: number) => {
     const draggedIdx = heroSlides.findIndex(s => s.id === draggedId);
     const targetIdx = heroSlides.findIndex(s => s.id === targetId);
     if (draggedIdx < 0 || targetIdx < 0 || draggedIdx === targetIdx) return;
@@ -263,12 +335,29 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     const [draggedItem] = newSlides.splice(draggedIdx, 1);
     newSlides.splice(targetIdx, 0, draggedItem);
     setHeroSlides(newSlides);
-    localStorage.setItem("heca_hero_slides", JSON.stringify(newSlides));
+
+    try {
+      const updates = newSlides.map((s, idx) =>
+        supabase.from('heca_hero_slides').update({ sort_order: idx + 1 }).eq('id', s.id)
+      );
+      await Promise.all(updates);
+    } catch (err) {
+      console.error("Error updating hero slides sort order in Supabase:", err);
+    }
   };
 
-  const updateStoreLinks = (links: StoreLinks) => {
+  const updateStoreLinks = async (links: StoreLinks) => {
     setStoreLinks(links);
-    localStorage.setItem("heca_store_links", JSON.stringify(links));
+    try {
+      const { error } = await supabase
+        .from('heca_settings')
+        .upsert({ key: 'store_links', value: links }, { onConflict: 'key' });
+      if (error) {
+        console.error("Error saving store links to Supabase:", error);
+      }
+    } catch (err) {
+      console.error("Error updating store links in Supabase:", err);
+    }
   };
 
   const setFilter = (category: string, subCategory: string | null) => {

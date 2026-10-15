@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   const [isAuth, setIsAuth] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [draggedProductId, setDraggedProductId] = useState<number | null>(null);
-  const { currency, setCurrency, formatPrice } = useCart();
+  const { currency, setCurrency, formatPrice, fxRate, updateFxRate } = useCart();
 
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -104,6 +104,8 @@ export default function AdminDashboard() {
   // Settings & Toast
   const [newPasscode, setNewPasscode] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const [rateInput, setRateInput] = useState("");
+  const [shippingInput, setShippingInput] = useState("");
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -111,35 +113,45 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    const authString = sessionStorage.getItem("heca_admin");
-    if (!authString) {
-      router.push("/admin/login");
-      return;
-    }
-
-    try {
-      const auth = JSON.parse(authString);
-      if (Date.now() > auth.expiresAt) {
-        sessionStorage.removeItem("heca_admin");
-        router.push("/admin/login");
-        return;
+    if (fxRate) setRateInput(fxRate.toString());
+    async function loadShipping() {
+      try {
+        const { data } = await supabase
+          .from("heca_settings")
+          .select("value")
+          .eq("key", "shipping_usd")
+          .single();
+        if (data && data.value) setShippingInput(Number(data.value).toString());
+      } catch (err) {
+        console.error("Error loading shipping_usd:", err);
       }
-    } catch {
-      sessionStorage.removeItem("heca_admin");
-      router.push("/admin/login");
-      return;
     }
+    loadShipping();
+  }, [fxRate]);
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsAuth(true);
-      setGlobalShopee(storeLinks.shopee);
-      setGlobalTokopedia(storeLinks.tokopedia);
-      setGlobalTiktok(storeLinks.tiktok);
-      setGlobalInstagram(storeLinks.instagram);
-      setGlobalPinterest(storeLinks.pinterest);
-      setGlobalSpotify(storeLinks.spotify);
-      setGlobalClientService(storeLinks.clientService);
-  }, [router, storeLinks]);
+  const handleRateSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (rateInput) {
+      await updateFxRate(Number(rateInput));
+    }
+    if (shippingInput) {
+      await supabase
+        .from("heca_settings")
+        .upsert({ key: "shipping_usd", value: Number(shippingInput) }, { onConflict: "key" });
+    }
+    showToast("Settings updated successfully");
+  };
+
+  useEffect(() => {
+    setIsAuth(true);
+    setGlobalShopee(storeLinks.shopee);
+    setGlobalTokopedia(storeLinks.tokopedia);
+    setGlobalTiktok(storeLinks.tiktok);
+    setGlobalInstagram(storeLinks.instagram);
+    setGlobalPinterest(storeLinks.pinterest);
+    setGlobalSpotify(storeLinks.spotify);
+    setGlobalClientService(storeLinks.clientService);
+  }, [storeLinks]);
 
   if (!isAuth) return <div className="min-h-screen bg-heca-bg"></div>;
 
@@ -151,9 +163,38 @@ export default function AdminDashboard() {
 
 
 
+  const isValidHttpUrl = (str: string) => {
+    try {
+      const u = new URL(str);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price || !image || sizes.length === 0) return alert("Please fill all fields");
+    if (!name || !price || !image || sizes.length === 0) {
+      return alert("Please fill all required fields (Name, Price, Image, and at least one Size)");
+    }
+
+    const numPrice = Number(price);
+    if (isNaN(numPrice) || numPrice <= 0) {
+      return alert("Price must be a valid number greater than 0");
+    }
+
+    const numDiscount = Number(discountPercent);
+    if (isNaN(numDiscount) || numDiscount < 0 || numDiscount > 100) {
+      return alert("Discount percent must be a number between 0 and 100");
+    }
+
+    if (!isValidHttpUrl(image)) {
+      return alert("Primary Image URL must start with http:// or https://");
+    }
+
+    if (hoverImage && !isValidHttpUrl(hoverImage)) {
+      return alert("Hover Image URL must start with http:// or https://");
+    }
 
     setIsSaving(true);
     try {
@@ -307,9 +348,11 @@ export default function AdminDashboard() {
     showToast("Passcode updated successfully");
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("heca_admin");
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch {}
+    router.push("/admin/login");
   };
 
   return (
@@ -453,14 +496,14 @@ export default function AdminDashboard() {
               </label>
               <input 
                 type="number" 
-                value={price ? (currency === 'USD' ? price : Math.round(Number(price) * 15500)).toString() : ""} 
+                value={price ? (currency === 'USD' ? price : Math.round(Number(price) * (fxRate || 15500))).toString() : ""} 
                 onChange={e => {
                   const val = e.target.value;
                   if (!val) setPrice("");
-                  else setPrice(currency === 'USD' ? val : (Number(val) / 15500).toString());
+                  else setPrice(currency === 'USD' ? val : (Number(val) / (fxRate || 15500)).toString());
                 }} 
                 className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" 
-                placeholder={currency === 'USD' ? "e.g. 290" : "e.g. 4495000"} 
+                placeholder={currency === 'USD' ? "e.g. 290" : `e.g. ${290 * (fxRate || 15500)}`} 
               />
             </div>
 
@@ -831,8 +874,35 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="border-t border-heca-primary/20 pt-12 flex flex-col md:flex-row justify-between items-center gap-8 pb-24">
+      <div className="border-t border-heca-primary/20 pt-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 pb-24">
         
+        {/* FX Rate & Shipping Settings */}
+        <form onSubmit={handleRateSave} className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex flex-col space-y-1">
+            <label className="text-[10px] uppercase tracking-widest opacity-60">Exchange Rate (1 USD = IDR)</label>
+            <input 
+              type="number"
+              value={rateInput}
+              onChange={(e) => setRateInput(e.target.value)}
+              placeholder="e.g. 15500"
+              className="bg-transparent border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary transition-colors text-sm tracking-widest placeholder:text-heca-primary/30 w-36"
+            />
+          </div>
+          <div className="flex flex-col space-y-1">
+            <label className="text-[10px] uppercase tracking-widest opacity-60">Shipping (USD)</label>
+            <input 
+              type="number"
+              value={shippingInput}
+              onChange={(e) => setShippingInput(e.target.value)}
+              placeholder="e.g. 15"
+              className="bg-transparent border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary transition-colors text-sm tracking-widest placeholder:text-heca-primary/30 w-24"
+            />
+          </div>
+          <button type="submit" className="bg-heca-primary text-heca-bg px-6 py-2.5 text-[10px] uppercase tracking-widest hover:bg-heca-primary/90 transition-colors">
+            Save Settings
+          </button>
+        </form>
+
         {/* Change Passcode */}
         <form onSubmit={handlePasscodeChange} className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex flex-col space-y-1">
@@ -846,11 +916,9 @@ export default function AdminDashboard() {
             />
           </div>
           <button type="submit" className="bg-heca-primary text-heca-bg px-6 py-2.5 text-[10px] uppercase tracking-widest hover:bg-heca-primary/90 transition-colors">
-            Update
+            Update Passcode
           </button>
         </form>
-
-        {/* Reset button removed for Supabase integration */}
       </div>
 
       {/* Toast Notification */}

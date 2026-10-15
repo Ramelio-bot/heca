@@ -104,10 +104,15 @@ export default function AntiGravityHero() {
       <nav className="fixed top-0 left-0 w-full px-6 md:px-10 py-8 z-40 flex justify-between items-start text-heca-bg mix-blend-difference pointer-events-none">
         <div className="flex flex-col pointer-events-auto">
           {/* Thin Hamburger Menu Icon */}
-          <div className="w-11 h-11 flex flex-col justify-center gap-1.5 cursor-pointer group -ml-2" onClick={() => setNavOpen(true)}>
+          <button 
+            type="button"
+            className="w-11 h-11 flex flex-col justify-center gap-1.5 cursor-pointer group -ml-2 bg-transparent border-0" 
+            onClick={() => setNavOpen(true)}
+            aria-label="Open navigation menu"
+          >
             <div className="w-8 h-px bg-current transition-transform group-hover:scale-110 origin-left"></div>
             <div className="w-8 h-px bg-current transition-transform group-hover:scale-110 origin-left"></div>
-          </div>
+          </button>
         </div>
 
         <div className="flex flex-col items-end space-y-3 text-[10px] uppercase tracking-widest font-sans font-medium pointer-events-auto">

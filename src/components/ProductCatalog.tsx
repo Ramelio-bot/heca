@@ -89,11 +89,25 @@ export default function ProductCatalog() {
         </div>
       )}
 
-      {filteredProducts.length === 0 ? (
+      {products.length === 0 ? (
+        <div className="grid grid-cols-12 gap-4 md:gap-8 max-w-[1600px] mx-auto">
+          {[1, 2, 3, 4, 5, 6].map((idx) => (
+            <div key={idx} className="col-span-12 md:col-span-4 h-[60vh] bg-heca-primary/5 animate-pulse flex flex-col justify-end p-6">
+              <div className="h-4 bg-heca-primary/10 w-3/4 mb-2"></div>
+              <div className="h-3 bg-heca-primary/10 w-1/4"></div>
+            </div>
+          ))}
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="w-full h-64 flex flex-col items-center justify-center space-y-4 text-heca-primary/50">
-          <p className="font-serif text-2xl md:text-3xl font-light tracking-wide text-center px-4 text-heca-primary/60">No collection items available in this category.</p>
-          <button onClick={() => window.location.reload()} className="text-xs uppercase tracking-widest border-b border-heca-primary/50 hover:text-heca-primary transition-colors">
-            Reset Filter
+          <p className="font-serif text-2xl md:text-3xl font-light tracking-wide text-center px-4 text-heca-primary/60">
+            No collection items available in this category.
+          </p>
+          <button 
+            onClick={() => setFilter("WOMAN", null)} 
+            className="text-xs uppercase tracking-widest border-b border-heca-primary/50 hover:text-heca-primary transition-colors py-1"
+          >
+            Explore All Archives
           </button>
         </div>
       ) : (

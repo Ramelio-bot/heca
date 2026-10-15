@@ -113,7 +113,7 @@ export default function HelpDrawer() {
           <div className="bg-white p-6 border border-heca-primary/10 flex flex-col space-y-6">
             <h3 className="text-sm font-serif uppercase tracking-widest text-center">Contact Us</h3>
             <a 
-              href="https://wa.me/6280000000000" 
+              href="https://wa.me/6281234567890?text=Hello%20HECA%20Client%20Care" 
               target="_blank" 
               rel="noopener noreferrer"
               className="w-full bg-[#25D366] text-white py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#20b858] transition-colors"
@@ -121,10 +121,10 @@ export default function HelpDrawer() {
               Chat via WhatsApp
             </a>
             <a 
-              href="mailto:clientcare@heca.com" 
+              href="mailto:care@heca.com" 
               className="w-full bg-heca-primary text-heca-bg py-4 text-center text-xs uppercase tracking-[0.2em] hover:opacity-90 transition-opacity"
             >
-              Email Client Care
+              Email Client Care (care@heca.com)
             </a>
           </div>
         </div>

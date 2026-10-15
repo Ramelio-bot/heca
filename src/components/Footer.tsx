@@ -86,7 +86,7 @@ export default function Footer() {
 
         {/* Bottom Section: Copyright */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-heca-primary/10 text-[9px] uppercase tracking-widest opacity-40">
-          <p>© 2026 HECA. ALL RIGHTS RESERVED.</p>
+          <p>© {new Date().getFullYear()} HECA. ALL RIGHTS RESERVED.</p>
           <div className="flex space-x-6">
             <a href="#" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
             <a href="#" className="hover:opacity-100 transition-opacity">Terms of Use</a>

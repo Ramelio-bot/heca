@@ -23,13 +23,14 @@ const bodoniModa = Bodoni_Moda({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://heca-official.vercel.app"),
   title: "HECA | High-Fashion & Minimalist Editorial",
   description: "HECA is a modern luxury fashion brand inspired by minimalist editorial style. Explore our latest collection of premium clothing, dresses, tops, and more.",
   keywords: ["HECA", "Luxury Fashion", "Minimalist", "Editorial", "Designer Clothes", "Premium Brand"],
   openGraph: {
     title: "HECA | High-Fashion & Minimalist Editorial",
     description: "Explore the latest collection of premium clothing, dresses, tops, and more.",
-    url: "https://heca-fashion.vercel.app",
+    url: "https://heca-official.vercel.app",
     siteName: "HECA",
     images: [
       {
@@ -57,8 +58,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLdOrg = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "HECA",
+    url: "https://heca-official.vercel.app",
+    logo: "https://heca-official.vercel.app/icon.jpg",
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: "care@heca.com",
+      contactType: "customer service",
+    },
+  };
+
   return (
     <html lang="en" className={`${inter.variable} ${bodoniModa.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }}
+        />
+      </head>
       <body className="antialiased font-sans bg-heca-bg text-heca-primary">
         <SplashScreen />
         <ProductProvider>

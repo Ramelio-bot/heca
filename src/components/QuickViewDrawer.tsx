@@ -4,11 +4,14 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import SizeGuideModal from "./SizeGuideModal";
+import PaypalCheckout from "./PaypalCheckout";
 
 export default function QuickViewDrawer() {
   const { isQuickViewOpen, setIsQuickViewOpen, selectedProduct, setMarketplaceModalOpen, formatPrice } = useCart();
   const [isVisible, setIsVisible] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [isPaypalCheckoutOpen, setIsPaypalCheckoutOpen] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string>("M");
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -79,6 +82,7 @@ export default function QuickViewDrawer() {
           <h2 className="text-sm font-serif uppercase tracking-widest">Product Detail</h2>
           <button 
             onClick={() => setIsQuickViewOpen(false)}
+            aria-label="Close product details"
             className="text-2xl font-light hover:opacity-60 transition-opacity min-h-[44px] min-w-[44px] p-2 flex items-center justify-center -mr-2"
           >
             ×
@@ -158,6 +162,27 @@ export default function QuickViewDrawer() {
                 </p>
               </div>
 
+              {/* Size Selector */}
+              <div>
+                <h3 className="text-[10px] uppercase tracking-widest opacity-40 mb-3 font-bold">Select Size</h3>
+                <div className="flex gap-2">
+                  {(selectedProduct.sizes && selectedProduct.sizes.length > 0 ? selectedProduct.sizes : ["S", "M", "L"]).map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => setSelectedSize(sz)}
+                      className={`w-10 h-10 border text-xs tracking-widest flex items-center justify-center transition-all ${
+                        selectedSize === sz
+                          ? "border-heca-primary bg-heca-primary text-heca-bg font-bold scale-105"
+                          : "border-heca-primary/30 text-heca-primary hover:border-heca-primary"
+                      }`}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {selectedProduct.description && (
                 <div>
                   <h3 className="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Description</h3>
@@ -185,18 +210,25 @@ export default function QuickViewDrawer() {
                 </div>
               )}
 
-              <div className="mt-auto pt-12 pb-8 flex flex-col gap-4">
+              <div className="mt-auto pt-10 pb-8 flex flex-col gap-3">
                 <button 
-                  onClick={() => setIsSizeGuideOpen(true)}
-                  className="w-full py-3 border border-heca-primary text-heca-primary bg-transparent text-[10px] uppercase tracking-[0.2em] hover:bg-heca-primary/5 transition-colors"
+                  onClick={() => setIsPaypalCheckoutOpen(true)}
+                  className="w-full py-4 bg-heca-primary text-heca-bg text-xs uppercase tracking-[0.2em] font-semibold hover:bg-heca-primary/90 transition-all flex items-center justify-center gap-2 shadow-sm"
                 >
-                  Size Guide
+                  <span>Checkout with PayPal</span>
+                  <span className="opacity-50 text-[10px] font-normal">· Instant Order</span>
                 </button>
                 <button 
                   onClick={handlePurchase}
-                  className="w-full py-4 bg-heca-primary text-heca-bg text-xs uppercase tracking-[0.2em] hover:bg-heca-primary/90 transition-colors"
+                  className="w-full py-3.5 border border-heca-primary/40 text-heca-primary bg-transparent text-[10px] uppercase tracking-[0.2em] hover:bg-heca-primary/5 transition-colors"
                 >
-                  Purchase Options
+                  Purchase via Marketplace (Shopee / Tokopedia / TikTok)
+                </button>
+                <button 
+                  onClick={() => setIsSizeGuideOpen(true)}
+                  className="w-full py-2 text-heca-primary/60 text-[10px] uppercase tracking-[0.15em] hover:text-heca-primary transition-colors text-center"
+                >
+                  View Size Guide
                 </button>
               </div>
             </div>
@@ -206,6 +238,14 @@ export default function QuickViewDrawer() {
       </div>
 
       <SizeGuideModal isOpen={isSizeGuideOpen} onClose={() => setIsSizeGuideOpen(false)} imageUrl={selectedProduct?.sizeGuideUrl} />
+
+      {isPaypalCheckoutOpen && selectedProduct && (
+        <PaypalCheckout
+          product={selectedProduct}
+          selectedSize={selectedSize}
+          onClose={() => setIsPaypalCheckoutOpen(false)}
+        />
+      )}
     </>
   );
 }
