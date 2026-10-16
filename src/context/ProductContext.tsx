@@ -49,6 +49,7 @@ export interface HeroSlide {
 
 interface ProductContextType {
   products: Product[];
+  isLoading: boolean;
   heroSlides: HeroSlide[];
   activeCategory: string;
   activeSubCategory: string | null;
@@ -135,6 +136,7 @@ const mapProductToRow = (p: Partial<Product>) => {
 
 export function ProductProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("WOMAN");
   const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
@@ -163,6 +165,8 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error("Error fetching products from Supabase:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -379,6 +383,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   return (
     <ProductContext.Provider value={{
       products,
+      isLoading,
       heroSlides,
       activeCategory,
       activeSubCategory,

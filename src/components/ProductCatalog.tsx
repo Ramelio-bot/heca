@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 
 export default function ProductCatalog() {
   const { setIsQuickViewOpen, setSelectedProduct, formatPrice } = useCart();
-  const { products, activeCategory, activeSubCategory, searchQuery, setFilter } = useProduct();
+  const { products, isLoading, activeCategory, activeSubCategory, searchQuery, setFilter } = useProduct();
   
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState<{ [key: number]: ProductSize }>({});
@@ -89,7 +89,7 @@ export default function ProductCatalog() {
         </div>
       )}
 
-      {products.length === 0 ? (
+      {isLoading ? (
         <div className="grid grid-cols-12 gap-4 md:gap-8 max-w-[1600px] mx-auto">
           {[1, 2, 3, 4, 5, 6].map((idx) => (
             <div key={idx} className="col-span-12 md:col-span-4 h-[60vh] bg-heca-primary/5 animate-pulse flex flex-col justify-end p-6">
@@ -97,6 +97,18 @@ export default function ProductCatalog() {
               <div className="h-3 bg-heca-primary/10 w-1/4"></div>
             </div>
           ))}
+        </div>
+      ) : products.length === 0 ? (
+        <div className="w-full py-28 flex flex-col items-center justify-center space-y-4 text-center px-4">
+          <span className="text-[10px] uppercase tracking-[0.3em] opacity-40 font-mono">
+            New Archive
+          </span>
+          <h3 className="font-serif text-3xl md:text-5xl font-light tracking-wide uppercase">
+            Collection In Curation
+          </h3>
+          <p className="text-xs uppercase tracking-widest opacity-60 max-w-md leading-relaxed">
+            The archive is currently empty and being refreshed with genuine contemporary pieces. Please check back soon or use the admin panel to add products.
+          </p>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="w-full h-64 flex flex-col items-center justify-center space-y-4 text-heca-primary/50">
