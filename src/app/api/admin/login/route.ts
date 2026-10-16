@@ -10,12 +10,26 @@ export async function POST(req: Request) {
     }
 
     // 1. Authenticate with Supabase Auth
-    const { data, error } = await supabase.auth.signInWithPassword({
+    let authData: any = null;
+    const firstAttempt = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
 
-    if (error || !data.user || !data.session) {
+    if (!firstAttempt.error && firstAttempt.data.user && firstAttempt.data.session) {
+      authData = firstAttempt.data;
+    } else if (!password.endsWith("!")) {
+      // Fallback: in case the user omitted the required exclamation mark
+      const secondAttempt = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password + "!",
+      });
+      if (!secondAttempt.error && secondAttempt.data.user && secondAttempt.data.session) {
+        authData = secondAttempt.data;
+      }
+    }
+
+    if (!authData || !authData.user || !authData.session) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
@@ -23,7 +37,7 @@ export async function POST(req: Request) {
     const { data: adminRecord } = await supabase
       .from("heca_admins")
       .select("email")
-      .eq("email", data.user.email)
+      .eq("email", authData.user.email)
       .single();
 
     if (!adminRecord) {
@@ -33,10 +47,10 @@ export async function POST(req: Request) {
     // 3. Set HttpOnly cookie with session access_token
     const res = NextResponse.json({
       success: true,
-      email: data.user.email,
+      email: authData.user.email,
     });
 
-    res.cookies.set("heca_admin_session", data.session.access_token, {
+    res.cookies.set("heca_admin_session", authData.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
