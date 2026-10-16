@@ -194,11 +194,39 @@ export default function PaypalCheckout({ product, selectedSize, onClose }: Paypa
                 </PayPalScriptProvider>
               </div>
             ) : (
-              <div className="p-4 border border-[#111111]/20 bg-[#111111]/5 text-center text-xs uppercase tracking-widest space-y-2">
-                <p className="font-bold">PayPal Gateway Ready</p>
-                <p className="opacity-70 text-[10px] leading-relaxed">
-                  To complete live transactions, configure PayPal credentials in environment settings.
+              <div className="p-6 border border-[#111111]/20 bg-[#111111]/5 text-center space-y-4">
+                <p className="text-xs uppercase tracking-widest font-bold">
+                  Pembayaran Online Sedang Disiapkan
                 </p>
+                <p className="opacity-70 text-[11px] leading-relaxed">
+                  Silakan belanja via Shopee / Tokopedia / TikTok untuk sementara waktu.
+                </p>
+                <div className="flex justify-center gap-3 pt-2">
+                  <a
+                    href={product.shopeeUrl || "https://shopee.co.id/heca.official"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 border border-[#111111]/30 text-[9px] uppercase tracking-widest hover:border-[#111111]"
+                  >
+                    Shopee
+                  </a>
+                  <a
+                    href={product.tokopediaUrl || "https://tokopedia.com/hecaofficial"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 border border-[#111111]/30 text-[9px] uppercase tracking-widest hover:border-[#111111]"
+                  >
+                    Tokopedia
+                  </a>
+                  <a
+                    href={product.tiktokUrl || "https://tiktok.com/@heca.official"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 border border-[#111111]/30 text-[9px] uppercase tracking-widest hover:border-[#111111]"
+                  >
+                    TikTok
+                  </a>
+                </div>
               </div>
             )}
           </div>

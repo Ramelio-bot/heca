@@ -56,11 +56,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const updateFxRate = async (rate: number) => {
     setFxRate(rate);
     try {
-      await supabase
-        .from("heca_settings")
-        .upsert({ key: "fx_rate", value: rate }, { onConflict: "key" });
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "fx_rate", value: rate }),
+      });
+      if (!res.ok) {
+        console.error("Failed to update fx_rate on server");
+      }
     } catch (err) {
-      console.error("Failed to update fx_rate in Supabase:", err);
+      console.error("Failed to update fx_rate on server:", err);
     }
   };
 

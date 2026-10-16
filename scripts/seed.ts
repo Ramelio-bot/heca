@@ -19,26 +19,47 @@ if (fs.existsSync(envPath)) {
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://xrzdcqnezhcezitolkuu.supabase.co";
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_PsuKyqXCDibmA-KQRri92Q_BF1DTNYW";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseKey) {
+  console.error("SUPABASE_SERVICE_ROLE_KEY tidak ada di .env.local. Seed dihentikan.");
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function seed() {
-  console.log("Seeding 50 products to Supabase...");
+  console.log("Seeding products to Supabase...");
   console.log(`Connecting to: ${supabaseUrl}`);
 
-  // 1. Delete existing products to ensure clean seed
-  console.log("Clearing existing products...");
-  const { error: deleteError } = await supabase
-    .from("heca_products")
-    .delete()
-    .neq("id", 0);
+  const isReset = process.argv.includes("--reset") || process.argv.includes("--fresh");
 
-  if (deleteError) {
-    console.warn("Notice during delete:", deleteError.message);
+  if (isReset) {
+    console.log("Flag --reset detected: clearing existing catalog...");
+    const { error: deleteError } = await supabase
+      .from("heca_products")
+      .delete()
+      .neq("id", 0);
+
+    if (deleteError) {
+      console.warn("Notice during delete:", deleteError.message);
+    }
   }
 
-  // 2. Map 50 mock products to Supabase columns
+  // Fetch current products to perform safe upsert by name
+  const { data: currentProducts, error: fetchError } = await supabase
+    .from("heca_products")
+    .select("id, name");
+
+  if (fetchError) {
+    console.error("Failed to query existing products:", fetchError);
+    process.exit(1);
+  }
+
+  const existingMap = new Map<string, number>();
+  currentProducts?.forEach(p => existingMap.set(p.name, p.id));
+
+  // Map 50 mock products to Supabase columns
   const rows = MOCK_PRODUCTS_50.map((p, index) => {
     const images = [p.image, p.hoverImage].filter(Boolean);
     return {
@@ -64,20 +85,40 @@ async function seed() {
     };
   });
 
-  // 3. Insert in batches of 10
-  for (let i = 0; i < rows.length; i += 10) {
-    const batch = rows.slice(i, i + 10);
-    const { error: insertError } = await supabase
-      .from("heca_products")
-      .insert(batch);
+  let insertedCount = 0;
+  let updatedCount = 0;
 
-    if (insertError) {
-      console.error(`Error inserting batch ${i / 10 + 1}:`, insertError);
-      process.exit(1);
+  for (const row of rows) {
+    const existingId = existingMap.get(row.name);
+    if (existingId) {
+      // Update existing mock item
+      const { error: updErr } = await supabase
+        .from("heca_products")
+        .update(row)
+        .eq("id", existingId);
+
+      if (updErr) {
+        console.error(`Error updating "${row.name}":`, updErr);
+      } else {
+        updatedCount++;
+      }
+    } else {
+      // Insert new item
+      const { error: insErr } = await supabase
+        .from("heca_products")
+        .insert([row]);
+
+      if (insErr) {
+        console.error(`Error inserting "${row.name}":`, insErr);
+      } else {
+        insertedCount++;
+      }
     }
   }
 
-  // 4. Verify count
+  console.log(`Seeding summary: ${insertedCount} inserted, ${updatedCount} updated.`);
+
+  // Verify total count
   const { count, error: countError } = await supabase
     .from("heca_products")
     .select("*", { count: "exact", head: true });
@@ -85,7 +126,7 @@ async function seed() {
   if (countError) {
     console.error("Count check error:", countError);
   } else {
-    console.log(`Successfully seeded! Total products in database: ${count}`);
+    console.log(`Total products in database: ${count}`);
   }
 }
 

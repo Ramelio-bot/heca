@@ -208,16 +208,16 @@ export function ProductProvider({ children }: { children: ReactNode }) {
 
   const addProduct = async (newProduct: Omit<Product, "id">) => {
     const row = mapProductToRow(newProduct);
-    const { data, error } = await supabase
-      .from('heca_products')
-      .insert([row])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Error adding product:", error);
-      throw error;
+    const res = await fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(row),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to add product");
     }
+    const data = await res.json();
     if (data) {
       setProducts(prev => [mapRowToProduct(data), ...prev]);
     }
@@ -225,40 +225,38 @@ export function ProductProvider({ children }: { children: ReactNode }) {
 
   const updateProduct = async (id: number, updatedFields: Partial<Product>) => {
     const row = mapProductToRow(updatedFields);
-    const { error } = await supabase
-      .from('heca_products')
-      .update(row)
-      .eq('id', id);
-    
-    if (error) {
-      console.error("Error updating product:", error);
-      throw error;
+    const res = await fetch("/api/products", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...row }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to update product");
     }
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedFields } : p));
   };
 
   const deleteProduct = async (id: number) => {
-    const { error } = await supabase
-      .from('heca_products')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error("Error deleting product:", error);
-      throw error;
+    const res = await fetch(`/api/products?id=${id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to delete product");
     }
     setProducts(prev => prev.filter(p => p.id !== id));
   };
 
   const bulkDeleteProducts = async (ids: number[]) => {
-    const { error } = await supabase
-      .from('heca_products')
-      .delete()
-      .in('id', ids);
-    
-    if (error) {
-      console.error("Error deleting products:", error);
-      throw error;
+    const res = await fetch("/api/products/bulk-delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to delete products");
     }
     setProducts(prev => prev.filter(p => !ids.includes(p.id)));
   };
@@ -273,56 +271,60 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     setProducts(newProducts);
 
     try {
-      const updates = newProducts.map((p, idx) =>
-        supabase.from('heca_products').update({ sort_order: idx + 1 }).eq('id', p.id)
-      );
-      await Promise.all(updates);
+      const res = await fetch("/api/products/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: newProducts.map(p => p.id) }),
+      });
+      if (!res.ok) {
+        console.error("Failed to persist product sort order on server");
+      }
     } catch (err) {
-      console.error("Error updating sort_order in Supabase:", err);
+      console.error("Error updating sort_order on server:", err);
     }
   };
 
   const addHeroSlide = async (newSlide: Omit<HeroSlide, "id">) => {
     const nextSortOrder = heroSlides.length + 1;
-    const { data, error } = await supabase
-      .from('heca_hero_slides')
-      .insert([{
+    const res = await fetch("/api/slides", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         type: newSlide.type,
         url: newSlide.url,
         sort_order: nextSortOrder,
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error adding hero slide to Supabase:", error);
-      return;
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to add hero slide");
     }
+    const data = await res.json();
     if (data) {
       setHeroSlides(prev => [...prev, data]);
     }
   };
 
   const deleteHeroSlide = async (id: number) => {
-    const { error } = await supabase
-      .from('heca_hero_slides')
-      .delete()
-      .eq('id', id);
-    if (error) {
-      console.error("Error deleting hero slide from Supabase:", error);
-      return;
+    const res = await fetch(`/api/slides?id=${id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to delete hero slide");
     }
     setHeroSlides(prev => prev.filter(s => s.id !== id));
   };
 
   const updateHeroSlide = async (id: number, updatedFields: Partial<HeroSlide>) => {
-    const { error } = await supabase
-      .from('heca_hero_slides')
-      .update(updatedFields)
-      .eq('id', id);
-    if (error) {
-      console.error("Error updating hero slide in Supabase:", error);
-      return;
+    const res = await fetch("/api/slides", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...updatedFields }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to update hero slide");
     }
     setHeroSlides(prev => prev.map(s => s.id === id ? { ...s, ...updatedFields } : s));
   };
@@ -337,26 +339,32 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     setHeroSlides(newSlides);
 
     try {
-      const updates = newSlides.map((s, idx) =>
-        supabase.from('heca_hero_slides').update({ sort_order: idx + 1 }).eq('id', s.id)
-      );
-      await Promise.all(updates);
+      const res = await fetch("/api/slides", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reorder", ids: newSlides.map(s => s.id) }),
+      });
+      if (!res.ok) {
+        console.error("Failed to persist slide sort order on server");
+      }
     } catch (err) {
-      console.error("Error updating hero slides sort order in Supabase:", err);
+      console.error("Error updating hero slides sort order on server:", err);
     }
   };
 
   const updateStoreLinks = async (links: StoreLinks) => {
     setStoreLinks(links);
     try {
-      const { error } = await supabase
-        .from('heca_settings')
-        .upsert({ key: 'store_links', value: links }, { onConflict: 'key' });
-      if (error) {
-        console.error("Error saving store links to Supabase:", error);
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "store_links", value: links }),
+      });
+      if (!res.ok) {
+        console.error("Failed to save store links on server");
       }
     } catch (err) {
-      console.error("Error updating store links in Supabase:", err);
+      console.error("Error updating store links on server:", err);
     }
   };
 

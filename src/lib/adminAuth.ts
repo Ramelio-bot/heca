@@ -9,11 +9,22 @@ export async function verifyAdminSession(req?: Request): Promise<{ authenticated
     if (authHeader && authHeader.startsWith("Bearer ")) {
       token = authHeader.substring(7);
     }
+    if (!token) {
+      const cookieHeader = req.headers.get("cookie");
+      if (cookieHeader) {
+        const match = cookieHeader.match(/heca_admin_session=([^;]+)/);
+        if (match) token = match[1].trim();
+      }
+    }
   }
 
   if (!token) {
-    const cookieStore = await cookies();
-    token = cookieStore.get("heca_admin_session")?.value;
+    try {
+      const cookieStore = await cookies();
+      token = cookieStore.get("heca_admin_session")?.value;
+    } catch {
+      // Invoked outside of Next.js server components / request store
+    }
   }
 
   if (!token) {

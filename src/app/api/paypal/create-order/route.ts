@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase, getSupabaseAdmin } from "@/lib/supabaseClient";
 import { createPayPalOrder } from "@/lib/paypal";
 
 export async function POST(req: Request) {
+  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+    return NextResponse.json(
+      { error: "PayPal credentials are not configured on server (503 Service Unavailable)." },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await req.json();
     const { productId, size, qty = 1, customerEmail, customerName, shippingAddress } = body;
@@ -43,8 +50,10 @@ export async function POST(req: Request) {
     const subtotal = unitPrice * quantity;
     const total = subtotal + shipping;
 
-    // 4. Create local order record in heca_orders
-    const { data: localOrder, error: orderError } = await supabase
+    const adminClient = getSupabaseAdmin();
+
+    // 4. Create local order record in heca_orders (server-only table)
+    const { data: localOrder, error: orderError } = await adminClient
       .from("heca_orders")
       .insert([
         {
@@ -80,7 +89,7 @@ export async function POST(req: Request) {
     });
 
     // 6. Update local order with paypal_order_id
-    await supabase
+    await adminClient
       .from("heca_orders")
       .update({ paypal_order_id: paypalOrder.id })
       .eq("id", localOrder.id);

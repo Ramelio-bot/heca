@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { capturePayPalOrder } from "@/lib/paypal";
 
 export async function POST(req: Request) {
+  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+    return NextResponse.json(
+      { error: "PayPal credentials are not configured on server (503 Service Unavailable)." },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await req.json();
     const { orderId } = body;
@@ -11,15 +18,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
 
+    const adminClient = getSupabaseAdmin();
+
     // 1. Find order by local ID or paypal_order_id
-    let { data: order } = await supabase
+    let { data: order } = await adminClient
       .from("heca_orders")
       .select("*")
       .eq("paypal_order_id", orderId)
       .single();
 
     if (!order) {
-      const { data: byLocalId } = await supabase
+      const { data: byLocalId } = await adminClient
         .from("heca_orders")
         .select("*")
         .eq("id", orderId)
@@ -37,7 +46,7 @@ export async function POST(req: Request) {
     const captureData = await capturePayPalOrder(paypalOrderId);
 
     if (captureData.status !== "COMPLETED") {
-      await supabase
+      await adminClient
         .from("heca_orders")
         .update({ status: captureData.status || "FAILED", updated_at: new Date().toISOString() })
         .eq("id", order.id);
@@ -52,7 +61,7 @@ export async function POST(req: Request) {
     const shipping = captureData.purchase_units?.[0]?.shipping;
 
     // 4. Update order status to CAPTURED
-    await supabase
+    await adminClient
       .from("heca_orders")
       .update({
         status: "CAPTURED",

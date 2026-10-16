@@ -119,6 +119,7 @@ export default function ProductCatalog() {
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.8, ease: "easeOut", delay: (i % 3) * 0.1 }}
               key={product.id} 
+              id={`product-${product.id}`}
               className={`${product.span || "col-span-12 md:col-span-4"} group relative overflow-hidden flex flex-col cursor-pointer`}
               onMouseEnter={() => setHoveredProduct(product.id)}
               onMouseLeave={() => setHoveredProduct(null)}

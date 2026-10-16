@@ -9,8 +9,23 @@ import Link from "next/link";import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { products, addProduct, updateProduct, deleteProduct, bulkDeleteProducts, reorderProduct, heroSlides, addHeroSlide, updateHeroSlide, deleteHeroSlide, reorderHeroSlide, storeLinks, updateStoreLinks } = useProduct();
+  const {
+    products,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    bulkDeleteProducts,
+    reorderProduct,
+    heroSlides,
+    addHeroSlide,
+    updateHeroSlide,
+    deleteHeroSlide,
+    reorderHeroSlide,
+    storeLinks,
+    updateStoreLinks,
+  } = useProduct();
   const [isAuth, setIsAuth] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [draggedProductId, setDraggedProductId] = useState<number | null>(null);
   const { currency, setCurrency, formatPrice, fxRate, updateFxRate } = useCart();
@@ -102,7 +117,6 @@ export default function AdminDashboard() {
   const [slideUrl, setSlideUrl] = useState("");
 
   // Settings & Toast
-  const [newPasscode, setNewPasscode] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [rateInput, setRateInput] = useState("");
   const [shippingInput, setShippingInput] = useState("");
@@ -135,15 +149,34 @@ export default function AdminDashboard() {
       await updateFxRate(Number(rateInput));
     }
     if (shippingInput) {
-      await supabase
-        .from("heca_settings")
-        .upsert({ key: "shipping_usd", value: Number(shippingInput) }, { onConflict: "key" });
+      try {
+        await fetch("/api/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: "shipping_usd", value: Number(shippingInput) }),
+        });
+      } catch (err) {
+        console.error("Failed to update shipping_usd:", err);
+      }
     }
     showToast("Settings updated successfully");
   };
 
   useEffect(() => {
-    setIsAuth(true);
+    fetch("/api/admin/session")
+      .then(r => r.json())
+      .then(d => {
+        if (!d.authenticated) {
+          router.replace("/admin/login");
+          return;
+        }
+        setIsAuth(true);
+      })
+      .catch(() => router.replace("/admin/login"))
+      .finally(() => setLoadingAuth(false));
+  }, [router]);
+
+  useEffect(() => {
     setGlobalShopee(storeLinks.shopee);
     setGlobalTokopedia(storeLinks.tokopedia);
     setGlobalTiktok(storeLinks.tiktok);
@@ -153,7 +186,15 @@ export default function AdminDashboard() {
     setGlobalClientService(storeLinks.clientService);
   }, [storeLinks]);
 
-  if (!isAuth) return <div className="min-h-screen bg-heca-bg"></div>;
+  if (loadingAuth || !isAuth) {
+    return (
+      <div className="min-h-screen bg-heca-bg flex items-center justify-center">
+        <div className="text-[10px] uppercase tracking-[0.3em] opacity-40 font-mono animate-pulse">
+          Authenticating Session...
+        </div>
+      </div>
+    );
+  }
 
   const handleSizeToggle = (size: ProductSize) => {
     setSizes(prev => 
@@ -186,6 +227,12 @@ export default function AdminDashboard() {
     const numDiscount = Number(discountPercent);
     if (isNaN(numDiscount) || numDiscount < 0 || numDiscount > 100) {
       return alert("Discount percent must be a number between 0 and 100");
+    }
+
+    const validSizes: ProductSize[] = ["S", "M", "L", "XL"];
+    const invalidSizes = sizes.filter(s => !validSizes.includes(s));
+    if (invalidSizes.length > 0) {
+      return alert("Sizes must only include standard options: S, M, L, XL");
     }
 
     if (!isValidHttpUrl(image)) {
@@ -338,14 +385,6 @@ export default function AdminDashboard() {
       clientService: globalClientService,
     });
     showToast("Global links updated successfully");
-  };
-
-  const handlePasscodeChange = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPasscode.trim()) return;
-    localStorage.setItem("heca_admin_passcode", newPasscode.trim());
-    setNewPasscode("");
-    showToast("Passcode updated successfully");
   };
 
   const handleLogout = async () => {
@@ -903,22 +942,21 @@ export default function AdminDashboard() {
           </button>
         </form>
 
-        {/* Change Passcode */}
-        <form onSubmit={handlePasscodeChange} className="flex flex-col md:flex-row gap-4 items-end">
+        {/* Admin Account Status */}
+        <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex flex-col space-y-1">
-            <label className="text-[10px] uppercase tracking-widest opacity-60">Admin Passcode</label>
-            <input 
-              type="password"
-              value={newPasscode}
-              onChange={(e) => setNewPasscode(e.target.value)}
-              placeholder="Enter new passcode"
-              className="bg-transparent border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary transition-colors text-sm tracking-widest placeholder:text-heca-primary/30 w-48"
-            />
+            <label className="text-[10px] uppercase tracking-widest opacity-60">Admin Account</label>
+            <div className="py-2 text-xs tracking-widest font-mono text-heca-primary font-bold">
+              admin@heca.com
+            </div>
           </div>
-          <button type="submit" className="bg-heca-primary text-heca-bg px-6 py-2.5 text-[10px] uppercase tracking-widest hover:bg-heca-primary/90 transition-colors">
-            Update Passcode
-          </button>
-        </form>
+          <Link
+            href="/admin/login"
+            className="border border-heca-primary/30 px-6 py-2.5 text-[10px] uppercase tracking-widest hover:border-heca-primary transition-colors text-center"
+          >
+            Switch Account
+          </Link>
+        </div>
       </div>
 
       {/* Toast Notification */}
