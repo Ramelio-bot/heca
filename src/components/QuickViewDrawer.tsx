@@ -222,7 +222,7 @@ export default function QuickViewDrawer() {
                   onClick={handlePurchase}
                   className="w-full py-3.5 border border-heca-primary/40 text-heca-primary bg-transparent text-[10px] uppercase tracking-[0.2em] hover:bg-heca-primary/5 transition-colors"
                 >
-                  Purchase via Marketplace (Shopee / Tokopedia / TikTok)
+                  Purchase via Marketplace (Shopee / Tokopedia / TikTok / Etsy / Amazon / Alibaba)
                 </button>
                 <button 
                   onClick={() => setIsSizeGuideOpen(true)}

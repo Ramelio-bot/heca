@@ -100,11 +100,17 @@ export default function AdminDashboard() {
   const [shopeeUrl, setShopeeUrl] = useState("");
   const [tokopediaUrl, setTokopediaUrl] = useState("");
   const [tiktokUrl, setTiktokUrl] = useState("");
+  const [etsyUrl, setEtsyUrl] = useState("");
+  const [amazonUrl, setAmazonUrl] = useState("");
+  const [alibabaUrl, setAlibabaUrl] = useState("");
 
   // Store Links Form States
   const [globalShopee, setGlobalShopee] = useState("");
   const [globalTokopedia, setGlobalTokopedia] = useState("");
   const [globalTiktok, setGlobalTiktok] = useState("");
+  const [globalEtsy, setGlobalEtsy] = useState("");
+  const [globalAmazon, setGlobalAmazon] = useState("");
+  const [globalAlibaba, setGlobalAlibaba] = useState("");
   const [globalInstagram, setGlobalInstagram] = useState("");
   const [globalPinterest, setGlobalPinterest] = useState("");
   const [globalSpotify, setGlobalSpotify] = useState("");
@@ -180,6 +186,9 @@ export default function AdminDashboard() {
     setGlobalShopee(storeLinks.shopee);
     setGlobalTokopedia(storeLinks.tokopedia);
     setGlobalTiktok(storeLinks.tiktok);
+    setGlobalEtsy(storeLinks.etsy || "");
+    setGlobalAmazon(storeLinks.amazon || "");
+    setGlobalAlibaba(storeLinks.alibaba || "");
     setGlobalInstagram(storeLinks.instagram);
     setGlobalPinterest(storeLinks.pinterest);
     setGlobalSpotify(storeLinks.spotify);
@@ -243,6 +252,25 @@ export default function AdminDashboard() {
       return alert("Hover Image URL must start with http:// or https://");
     }
 
+    if (shopeeUrl && !isValidHttpUrl(shopeeUrl)) {
+      return alert("Shopee URL must start with http:// or https://");
+    }
+    if (tokopediaUrl && !isValidHttpUrl(tokopediaUrl)) {
+      return alert("Tokopedia URL must start with http:// or https://");
+    }
+    if (tiktokUrl && !isValidHttpUrl(tiktokUrl)) {
+      return alert("TikTok Shop URL must start with http:// or https://");
+    }
+    if (etsyUrl && !isValidHttpUrl(etsyUrl)) {
+      return alert("Etsy URL must start with http:// or https://");
+    }
+    if (amazonUrl && !isValidHttpUrl(amazonUrl)) {
+      return alert("Amazon URL must start with http:// or https://");
+    }
+    if (alibabaUrl && !isValidHttpUrl(alibabaUrl)) {
+      return alert("Alibaba URL must start with http:// or https://");
+    }
+
     setIsSaving(true);
     try {
       if (editingProductId !== null) {
@@ -262,6 +290,9 @@ export default function AdminDashboard() {
           shopeeUrl,
           tokopediaUrl,
           tiktokUrl,
+          etsyUrl,
+          amazonUrl,
+          alibabaUrl,
           hoverImage,
           videoUrl,
           sizeGuideUrl,
@@ -285,6 +316,9 @@ export default function AdminDashboard() {
           shopeeUrl,
           tokopediaUrl,
           tiktokUrl,
+          etsyUrl,
+          amazonUrl,
+          alibabaUrl,
           hoverImage,
           videoUrl,
           sizeGuideUrl,
@@ -321,6 +355,9 @@ export default function AdminDashboard() {
     setShopeeUrl("");
     setTokopediaUrl("");
     setTiktokUrl("");
+    setEtsyUrl("");
+    setAmazonUrl("");
+    setAlibabaUrl("");
   };
 
   const handleEditClick = (product: Product) => {
@@ -343,6 +380,9 @@ export default function AdminDashboard() {
     setShopeeUrl(product.shopeeUrl || "");
     setTokopediaUrl(product.tokopediaUrl || "");
     setTiktokUrl(product.tiktokUrl || "");
+    setEtsyUrl(product.etsyUrl || "");
+    setAmazonUrl(product.amazonUrl || "");
+    setAlibabaUrl(product.alibabaUrl || "");
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -379,6 +419,9 @@ export default function AdminDashboard() {
       shopee: globalShopee,
       tokopedia: globalTokopedia,
       tiktok: globalTiktok,
+      etsy: globalEtsy,
+      amazon: globalAmazon,
+      alibaba: globalAlibaba,
       instagram: globalInstagram,
       pinterest: globalPinterest,
       spotify: globalSpotify,
@@ -636,6 +679,39 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                <label className="opacity-60">Etsy URL</label>
+                <input
+                  type="text"
+                  value={etsyUrl}
+                  onChange={e => setEtsyUrl(e.target.value)}
+                  className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                  placeholder="https://www.etsy.com/shop/..."
+                />
+              </div>
+              <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                <label className="opacity-60">Amazon URL</label>
+                <input
+                  type="text"
+                  value={amazonUrl}
+                  onChange={e => setAmazonUrl(e.target.value)}
+                  className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                  placeholder="https://www.amazon.com/stores/..."
+                />
+              </div>
+              <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                <label className="opacity-60">Alibaba URL</label>
+                <input
+                  type="text"
+                  value={alibabaUrl}
+                  onChange={e => setAlibabaUrl(e.target.value)}
+                  className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                  placeholder="https://....en.alibaba.com"
+                />
+              </div>
+            </div>
+
             <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
               <label className="opacity-60">Product Description</label>
               <textarea value={description} onChange={e => setDescription(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs min-h-[60px]" placeholder="Detailed product description..." />
@@ -791,6 +867,21 @@ export default function AdminDashboard() {
             <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
               <label className="opacity-60">Official TikTok Shop Link</label>
               <input type="text" value={globalTiktok} onChange={e => setGlobalTiktok(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://tiktok.com/..." />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+              <label className="opacity-60">Official Etsy Store Link</label>
+              <input type="text" value={globalEtsy} onChange={e => setGlobalEtsy(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://www.etsy.com/shop/..." />
+            </div>
+            <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+              <label className="opacity-60">Official Amazon Store Link</label>
+              <input type="text" value={globalAmazon} onChange={e => setGlobalAmazon(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://www.amazon.com/stores/..." />
+            </div>
+            <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+              <label className="opacity-60">Official Alibaba Store Link</label>
+              <input type="text" value={globalAlibaba} onChange={e => setGlobalAlibaba(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://....en.alibaba.com" />
             </div>
           </div>
           

@@ -21,6 +21,13 @@ export default function MarketplaceModal() {
     ? selectedProduct.price * (1 - selectedProduct.discountPercent / 100) 
     : selectedProduct.price;
 
+  const shopeeLink = selectedProduct.shopeeUrl || storeLinks?.shopee;
+  const tokopediaLink = selectedProduct.tokopediaUrl || storeLinks?.tokopedia;
+  const tiktokLink = selectedProduct.tiktokUrl || storeLinks?.tiktok;
+  const etsyLink = selectedProduct.etsyUrl || storeLinks?.etsy;
+  const amazonLink = selectedProduct.amazonUrl || storeLinks?.amazon;
+  const alibabaLink = selectedProduct.alibabaUrl || storeLinks?.alibaba;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
       <div className="bg-heca-bg w-full max-w-md md:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row relative text-heca-primary font-sans animate-in fade-in zoom-in-95 duration-300">
@@ -78,32 +85,71 @@ export default function MarketplaceModal() {
           </div>
 
           <div className="flex flex-col space-y-3">
-            <a 
-              href={selectedProduct.shopeeUrl || storeLinks.shopee} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full border border-[#EE4D2D] text-[#EE4D2D] py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#EE4D2D] hover:text-white transition-colors flex items-center justify-center gap-3"
-            >
-              BUY ON SHOPEE
-            </a>
+            {shopeeLink && (
+              <a 
+                href={shopeeLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full border border-[#EE4D2D] text-[#EE4D2D] py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#EE4D2D] hover:text-white transition-colors flex items-center justify-center gap-3"
+              >
+                BUY ON SHOPEE
+              </a>
+            )}
             
-            <a 
-              href={selectedProduct.tokopediaUrl || storeLinks.tokopedia} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full border border-[#42B549] text-[#42B549] py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#42B549] hover:text-white transition-colors flex items-center justify-center gap-3"
-            >
-              BUY ON TOKOPEDIA
-            </a>
+            {tokopediaLink && (
+              <a 
+                href={tokopediaLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full border border-[#42B549] text-[#42B549] py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#42B549] hover:text-white transition-colors flex items-center justify-center gap-3"
+              >
+                BUY ON TOKOPEDIA
+              </a>
+            )}
             
-            <a 
-              href={selectedProduct.tiktokUrl || storeLinks.tiktok} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full border border-black text-black py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-3"
-            >
-              BUY ON TIKTOK SHOP
-            </a>
+            {tiktokLink && (
+              <a 
+                href={tiktokLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full border border-black text-black py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-3"
+              >
+                BUY ON TIKTOK SHOP
+              </a>
+            )}
+
+            {etsyLink && (
+              <a 
+                href={etsyLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full border border-[#F1641E] text-[#F1641E] py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#F1641E] hover:text-white transition-colors flex items-center justify-center gap-3"
+              >
+                BUY ON ETSY
+              </a>
+            )}
+
+            {amazonLink && (
+              <a 
+                href={amazonLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full border border-[#FF9900] text-[#FF9900] py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#FF9900] hover:text-white transition-colors flex items-center justify-center gap-3"
+              >
+                BUY ON AMAZON
+              </a>
+            )}
+
+            {alibabaLink && (
+              <a 
+                href={alibabaLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full border border-[#FF6A00] text-[#FF6A00] py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#FF6A00] hover:text-white transition-colors flex items-center justify-center gap-3"
+              >
+                BUY ON ALIBABA
+              </a>
+            )}
           </div>
         </div>
       </div>

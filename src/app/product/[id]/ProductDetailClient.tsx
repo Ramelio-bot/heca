@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Product, ProductSize } from "@/context/ProductContext";
+import { Product, ProductSize, useProduct } from "@/context/ProductContext";
 import { useCart } from "@/context/CartContext";
 import PaypalCheckout from "@/components/PaypalCheckout";
 
 export default function ProductDetailClient({ product }: { product: Product }) {
   const { formatPrice } = useCart();
+  const { storeLinks } = useProduct();
   const [selectedSize, setSelectedSize] = useState<ProductSize>(
     (product.sizes?.[0] as ProductSize) || "M"
   );
@@ -169,30 +170,66 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
             {/* Marketplace Alternatives */}
             <div className="grid grid-cols-3 gap-2 pt-2">
-              <a
-                href={product.shopeeUrl || "https://shopee.co.id/heca.official"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="py-3 text-[10px] uppercase tracking-widest border border-heca-primary/20 text-center hover:border-heca-primary transition-colors"
-              >
-                Shopee
-              </a>
-              <a
-                href={product.tokopediaUrl || "https://tokopedia.com/hecaofficial"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="py-3 text-[10px] uppercase tracking-widest border border-heca-primary/20 text-center hover:border-heca-primary transition-colors"
-              >
-                Tokopedia
-              </a>
-              <a
-                href={product.tiktokUrl || "https://tiktok.com/@heca.official"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="py-3 text-[10px] uppercase tracking-widest border border-heca-primary/20 text-center hover:border-heca-primary transition-colors"
-              >
-                TikTok
-              </a>
+              {(product.shopeeUrl || storeLinks?.shopee) && (
+                <a
+                  href={product.shopeeUrl || storeLinks.shopee}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 text-[10px] uppercase tracking-widest border border-heca-primary/20 text-center hover:border-heca-primary transition-colors"
+                >
+                  Shopee
+                </a>
+              )}
+              {(product.tokopediaUrl || storeLinks?.tokopedia) && (
+                <a
+                  href={product.tokopediaUrl || storeLinks.tokopedia}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 text-[10px] uppercase tracking-widest border border-heca-primary/20 text-center hover:border-heca-primary transition-colors"
+                >
+                  Tokopedia
+                </a>
+              )}
+              {(product.tiktokUrl || storeLinks?.tiktok) && (
+                <a
+                  href={product.tiktokUrl || storeLinks.tiktok}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 text-[10px] uppercase tracking-widest border border-heca-primary/20 text-center hover:border-heca-primary transition-colors"
+                >
+                  TikTok
+                </a>
+              )}
+              {(product.etsyUrl || storeLinks?.etsy) && (
+                <a
+                  href={product.etsyUrl || storeLinks.etsy}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 text-[10px] uppercase tracking-widest border border-heca-primary/20 text-center hover:border-heca-primary transition-colors"
+                >
+                  Etsy
+                </a>
+              )}
+              {(product.amazonUrl || storeLinks?.amazon) && (
+                <a
+                  href={product.amazonUrl || storeLinks.amazon}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 text-[10px] uppercase tracking-widest border border-heca-primary/20 text-center hover:border-heca-primary transition-colors"
+                >
+                  Amazon
+                </a>
+              )}
+              {(product.alibabaUrl || storeLinks?.alibaba) && (
+                <a
+                  href={product.alibabaUrl || storeLinks.alibaba}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 text-[10px] uppercase tracking-widest border border-heca-primary/20 text-center hover:border-heca-primary transition-colors"
+                >
+                  Alibaba
+                </a>
+              )}
             </div>
           </div>
 

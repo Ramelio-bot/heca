@@ -199,9 +199,9 @@ export default function PaypalCheckout({ product, selectedSize, onClose }: Paypa
                   Pembayaran Online Sedang Disiapkan
                 </p>
                 <p className="opacity-70 text-[11px] leading-relaxed">
-                  Silakan belanja via Shopee / Tokopedia / TikTok untuk sementara waktu.
+                  Silakan belanja via marketplace resmi kami untuk sementara waktu.
                 </p>
-                <div className="flex justify-center gap-3 pt-2">
+                <div className="flex flex-wrap justify-center gap-2 pt-2">
                   <a
                     href={product.shopeeUrl || "https://shopee.co.id/heca.official"}
                     target="_blank"
@@ -225,6 +225,30 @@ export default function PaypalCheckout({ product, selectedSize, onClose }: Paypa
                     className="px-3 py-1.5 border border-[#111111]/30 text-[9px] uppercase tracking-widest hover:border-[#111111]"
                   >
                     TikTok
+                  </a>
+                  <a
+                    href={product.etsyUrl || "https://www.etsy.com/shop/hecaofficial"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 border border-[#111111]/30 text-[9px] uppercase tracking-widest hover:border-[#111111]"
+                  >
+                    Etsy
+                  </a>
+                  <a
+                    href={product.amazonUrl || "https://www.amazon.com/stores/hecaofficial"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 border border-[#111111]/30 text-[9px] uppercase tracking-widest hover:border-[#111111]"
+                  >
+                    Amazon
+                  </a>
+                  <a
+                    href={product.alibabaUrl || "https://hecaofficial.en.alibaba.com"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 border border-[#111111]/30 text-[9px] uppercase tracking-widest hover:border-[#111111]"
+                  >
+                    Alibaba
                   </a>
                 </div>
               </div>

@@ -21,6 +21,9 @@ export interface Product {
   shopeeUrl?: string;
   tokopediaUrl?: string;
   tiktokUrl?: string;
+  etsyUrl?: string;
+  amazonUrl?: string;
+  alibabaUrl?: string;
   hoverImage?: string;
   description?: string;
   material?: string;
@@ -35,6 +38,9 @@ export interface StoreLinks {
   shopee: string;
   tokopedia: string;
   tiktok: string;
+  etsy: string;
+  amazon: string;
+  alibaba: string;
   instagram: string;
   pinterest: string;
   spotify: string;
@@ -100,6 +106,9 @@ const mapRowToProduct = (row: any): Product => ({
   shopeeUrl: row.shopee_url || undefined,
   tokopediaUrl: row.tokopedia_url || undefined,
   tiktokUrl: row.tiktok_url || undefined,
+  etsyUrl: row.etsy_url || undefined,
+  amazonUrl: row.amazon_url || undefined,
+  alibabaUrl: row.alibaba_url || undefined,
   videoUrl: row.video_url || undefined,
   sizeGuideUrl: row.size_guide_url || undefined,
   sortOrder: row.sort_order ?? 0,
@@ -124,6 +133,9 @@ const mapProductToRow = (p: Partial<Product>) => {
   if (p.shopeeUrl !== undefined) row.shopee_url = p.shopeeUrl;
   if (p.tokopediaUrl !== undefined) row.tokopedia_url = p.tokopediaUrl;
   if (p.tiktokUrl !== undefined) row.tiktok_url = p.tiktokUrl;
+  if (p.etsyUrl !== undefined) row.etsy_url = p.etsyUrl;
+  if (p.amazonUrl !== undefined) row.amazon_url = p.amazonUrl;
+  if (p.alibabaUrl !== undefined) row.alibaba_url = p.alibabaUrl;
   if (p.videoUrl !== undefined) row.video_url = p.videoUrl;
   if (p.sizeGuideUrl !== undefined) row.size_guide_url = p.sizeGuideUrl;
   if (p.sortOrder !== undefined) row.sort_order = p.sortOrder;
@@ -144,6 +156,9 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     shopee: "https://shopee.co.id/heca.official",
     tokopedia: "https://tokopedia.com/hecaofficial",
     tiktok: "https://tiktok.com/@heca.official",
+    etsy: "https://www.etsy.com/shop/hecaofficial",
+    amazon: "https://www.amazon.com/stores/hecaofficial",
+    alibaba: "https://hecaofficial.en.alibaba.com",
     instagram: "https://instagram.com/heca.official",
     pinterest: "https://pinterest.com/heca.official",
     spotify: "https://spotify.com/user/heca.official",

@@ -66,6 +66,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Hover image URL must be http/https" }, { status: 400 });
     }
 
+    if (body.shopee_url && !isValidHttpUrl(body.shopee_url)) {
+      return NextResponse.json({ error: "Shopee URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (body.tokopedia_url && !isValidHttpUrl(body.tokopedia_url)) {
+      return NextResponse.json({ error: "Tokopedia URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (body.tiktok_url && !isValidHttpUrl(body.tiktok_url)) {
+      return NextResponse.json({ error: "TikTok Shop URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (body.etsy_url && !isValidHttpUrl(body.etsy_url)) {
+      return NextResponse.json({ error: "Etsy URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (body.amazon_url && !isValidHttpUrl(body.amazon_url)) {
+      return NextResponse.json({ error: "Amazon URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (body.alibaba_url && !isValidHttpUrl(body.alibaba_url)) {
+      return NextResponse.json({ error: "Alibaba URL must start with http:// or https://" }, { status: 400 });
+    }
+
     const adminClient = getSupabaseAdmin();
     const { data, error } = await adminClient
       .from("heca_products")
@@ -113,6 +137,34 @@ export async function PUT(req: Request) {
       if (!isValidHttpUrl(fields.images[0])) {
         return NextResponse.json({ error: "Image URL must be http/https" }, { status: 400 });
       }
+    }
+
+    if (fields.hover_image && !isValidHttpUrl(fields.hover_image)) {
+      return NextResponse.json({ error: "Hover image URL must be http/https" }, { status: 400 });
+    }
+
+    if (fields.shopee_url && !isValidHttpUrl(fields.shopee_url)) {
+      return NextResponse.json({ error: "Shopee URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (fields.tokopedia_url && !isValidHttpUrl(fields.tokopedia_url)) {
+      return NextResponse.json({ error: "Tokopedia URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (fields.tiktok_url && !isValidHttpUrl(fields.tiktok_url)) {
+      return NextResponse.json({ error: "TikTok Shop URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (fields.etsy_url && !isValidHttpUrl(fields.etsy_url)) {
+      return NextResponse.json({ error: "Etsy URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (fields.amazon_url && !isValidHttpUrl(fields.amazon_url)) {
+      return NextResponse.json({ error: "Amazon URL must start with http:// or https://" }, { status: 400 });
+    }
+
+    if (fields.alibaba_url && !isValidHttpUrl(fields.alibaba_url)) {
+      return NextResponse.json({ error: "Alibaba URL must start with http:// or https://" }, { status: 400 });
     }
 
     const adminClient = getSupabaseAdmin();
