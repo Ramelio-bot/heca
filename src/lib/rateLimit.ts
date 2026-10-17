@@ -1,27 +1,36 @@
-// Rate limiter sederhana berbasis Map (per server instance).
-// Cukup untuk single-instance Vercel serverless.
-const attempts = new Map<string, { count: number; resetAt: number }>();
+import { getSupabaseAdmin, supabase } from "./supabaseClient";
 
-export function checkRateLimit(key: string, max = 5, windowMs = 15 * 60 * 1000): {
-  allowed: boolean;
-  retryAfter: number;
-} {
-  const now = Date.now();
-  const rec = attempts.get(key);
+const MAX_ATTEMPTS = 5;
+const WINDOW_MINUTES = 15;
 
-  if (!rec || rec.resetAt < now) {
-    attempts.set(key, { count: 1, resetAt: now + windowMs });
+export async function checkRateLimit(key: string): Promise<{ allowed: boolean; retryAfter: number }> {
+  try {
+    const client = process.env.SUPABASE_SERVICE_ROLE_KEY ? getSupabaseAdmin() : supabase;
+    const { data, error } = await client.rpc("register_login_attempt", { p_key: key });
+    if (error || !data) {
+      // Gagal membaca rate limit -> jangan kunci user (fail-open agar tidak mengunci admin sendiri)
+      console.error("Rate limit check failed:", error);
+      return { allowed: true, retryAfter: 0 };
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      allowed: Boolean(row?.allowed),
+      retryAfter: Number(row?.retry_after ?? 0),
+    };
+  } catch (err) {
+    console.error("Rate limit exception:", err);
     return { allowed: true, retryAfter: 0 };
   }
+}
 
-  if (rec.count >= max) {
-    return { allowed: false, retryAfter: Math.ceil((rec.resetAt - now) / 1000) };
+export async function resetRateLimit(key: string): Promise<void> {
+  try {
+    const client = process.env.SUPABASE_SERVICE_ROLE_KEY ? getSupabaseAdmin() : supabase;
+    await client.rpc("clear_login_attempt", { p_key: key });
+  } catch (err) {
+    console.error("Rate limit reset failed:", err);
   }
-
-  rec.count += 1;
-  return { allowed: true, retryAfter: 0 };
 }
 
-export function resetRateLimit(key: string) {
-  attempts.delete(key);
-}
+export const RATE_LIMIT_MAX = MAX_ATTEMPTS;
+export const RATE_LIMIT_WINDOW_MIN = WINDOW_MINUTES;

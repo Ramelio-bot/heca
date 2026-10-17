@@ -101,6 +101,8 @@ Database migration files are located in `supabase/migrations/` and must be appli
    - Creates the public storage bucket `heca-media` with RLS policies for admin uploads.
 8. **`008_drop_public_read_admins.sql`**
    - Removes public select permissions on `heca_admins` to protect admin emails.
+9. **`009_login_rate_limit.sql`**
+   - Database-backed rate limiting table and atomic RPC functions (`register_login_attempt`, `clear_login_attempt`) for serverless environments.
 
 ### Applying Migrations via CLI:
 ```bash
@@ -112,6 +114,7 @@ npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/mi
 npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/006_marketplace_channels.sql
 npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/007_storage_heca_media.sql
 npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/008_drop_public_read_admins.sql
+npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/009_login_rate_limit.sql
 ```
 
 ---
@@ -169,11 +172,33 @@ Each product can define specific URLs per channel, falling back automatically to
 
 ---
 
-## 8. Limitations & Implementation Notes
+## 8. Catatan Teknis & Keterbatasan
 
-1. **In-Memory Rate Limiting**: The login rate limiter operates in-memory (`Map`). In distributed serverless environments (Vercel edge/lambdas), state is tracked per active instance. For high-volume multi-region production, an external Redis service (e.g., Upstash or Vercel KV) is recommended.
-2. **Content Security Policy (CSP)**: Strict headers are defined in `next.config.ts`, whitelisting Supabase Storage, Google Fonts, Unsplash, and PayPal SDK domains.
-3. **Vercel Deployment**: Server-side mutations require `SUPABASE_SERVICE_ROLE_KEY` to be set in Vercel environment variables. Without it, server endpoints return 500.
+### Rate Limiting
+Rate limiting login disimpan di tabel Supabase (`login_attempts`) via fungsi RPC
+agar berlaku lintas instance serverless. Limit: **5 percobaan / 15 menit per IP**.
+Bila pengecekan rate limit gagal, sistem **fail-open** (tidak mengunci user) agar
+admin tidak terkunci karena masalah koneksi database.
+
+### Content-Security-Policy
+CSP mengizinkan: `self`, Unsplash, Supabase (storage & API), Google Fonts, PayPal SDK.
+Bila nanti menambah domain CDN lain (mis. Cloudinary), tambahkan di `next.config.ts`.
+
+### Env yang WAJIB diisi di Vercel
+| Key | Wajib | Sumber |
+|---|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | Ya | Supabase → Settings → API |
+| `PAYPAL_CLIENT_ID` | Ya* | PayPal Developer Dashboard |
+| `PAYPAL_CLIENT_SECRET` | Ya* | PayPal Developer Dashboard |
+| `PAYPAL_MODE` | Ya* | `sandbox` atau `live` |
+| `NEXT_PUBLIC_SITE_URL` | Ya | `https://heca-official.vercel.app` |
+
+\* Tanpa ini, checkout PayPal tidak aktif (endpoint mengembalikan 503).
+
+### Yang TIDAK bisa dikerjakan tanpa akses user
+- Mengisi env var di Vercel
+- Mengubah password admin
+- Menghapus akun `auth.users` pihak ketiga
 
 ---
 

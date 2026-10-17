@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const key = `login:${ip}`;
 
-    const rl = checkRateLimit(key);
+    const rl = await checkRateLimit(key);
     if (!rl.allowed) {
       return NextResponse.json(
         { error: `Terlalu banyak percobaan. Coba lagi dalam ${rl.retryAfter} detik.` },
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     }
 
     // Reset rate limit on success
-    resetRateLimit(key);
+    await resetRateLimit(key);
 
     // 3. Set HttpOnly cookie with session access_token
     const res = NextResponse.json({
