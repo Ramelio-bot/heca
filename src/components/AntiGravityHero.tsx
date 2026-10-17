@@ -6,19 +6,25 @@ import { useCart } from "@/context/CartContext";
 import { useProduct } from "@/context/ProductContext";
 import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useCustomer } from "@/context/CustomerContext";
 
 export default function AntiGravityHero() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { setNavOpen, setIsHelpOpen, currency, setCurrency } = useCart();
   const { heroSlides, searchQuery, setSearchQuery } = useProduct();
+  const { isAuthenticated } = useCustomer();
   const router = useRouter();
   
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 1000], [0, 400]);
 
-  const handleLoginClick = () => {
+  const handleAccountClick = () => {
     setNavOpen(false);
-    router.push("/admin/login");
+    if (isAuthenticated) {
+      router.push("/account");
+    } else {
+      router.push("/login");
+    }
   };
 
   const handleNext = () => {
@@ -149,7 +155,9 @@ export default function AntiGravityHero() {
           </div>
 
           <div className="flex gap-2">
-            <button onClick={handleLoginClick} className="hover:opacity-60 transition-opacity uppercase tracking-widest z-30 cursor-pointer min-h-[44px] min-w-[44px] px-2 flex items-center justify-center">LOG IN</button>
+            <button onClick={handleAccountClick} className="hover:opacity-60 transition-opacity uppercase tracking-widest z-30 cursor-pointer min-h-[44px] min-w-[44px] px-2 flex items-center justify-center">
+              {isAuthenticated ? "MY ACCOUNT" : "LOG IN"}
+            </button>
             <button onClick={() => setIsHelpOpen(true)} className="hover:opacity-60 transition-opacity min-h-[44px] min-w-[44px] px-2 flex items-center justify-center -mr-2">HELP</button>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { useProduct } from "@/context/ProductContext";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { useCustomer } from "@/context/CustomerContext";
 
 const THUMBNAILS = [
   { label: "THE NEW", filter: "THE NEW", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80" },
@@ -18,6 +19,7 @@ const THUMBNAILS = [
 export default function NavigationDrawer() {
   const { isNavOpen, setNavOpen, setIsHelpOpen, setSelectedProduct, setIsQuickViewOpen, formatPrice } = useCart();
   const { setFilter, products } = useProduct();
+  const { isAuthenticated } = useCustomer();
   const [activeCategory, setActiveCategory] = useState("WOMAN");
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [localSearchQuery, setLocalSearchQuery] = useState("");
@@ -73,9 +75,13 @@ export default function NavigationDrawer() {
     setNavOpen(false);
   };
 
-  const handleLoginClick = () => {
+  const handleAccountClick = () => {
     setNavOpen(false);
-    router.push("/admin/login");
+    if (isAuthenticated) {
+      router.push("/account");
+    } else {
+      router.push("/login");
+    }
   };
 
   const handleSubCategoryClick = (cat: string, subCategory: string | null) => {
@@ -183,7 +189,9 @@ export default function NavigationDrawer() {
             </div>
           )}
           <div className="flex gap-4 mt-2">
-            <button onClick={handleLoginClick} className="hover:opacity-60 transition-opacity uppercase tracking-widest cursor-pointer z-30">LOG IN</button>
+            <button onClick={handleAccountClick} className="hover:opacity-60 transition-opacity uppercase tracking-widest cursor-pointer z-30">
+              {isAuthenticated ? "MY ACCOUNT" : "LOG IN"}
+            </button>
             <button onClick={() => { setNavOpen(false); setIsHelpOpen(true); }} className="hover:opacity-60 transition-opacity uppercase tracking-widest cursor-pointer z-30">HELP</button>
           </div>
         </div>

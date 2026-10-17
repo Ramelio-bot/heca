@@ -50,6 +50,18 @@ export async function POST(req: Request) {
     const subtotal = unitPrice * quantity;
     const total = subtotal + shipping;
 
+    // Check if customer is authenticated
+    const { verifyCustomerSession } = await import("@/lib/customerAuth");
+    const session = await verifyCustomerSession(req);
+    const authUserId = session.authenticated ? session.user?.id : null;
+    const resolvedEmail = customerEmail || (session.authenticated ? session.user?.email : null);
+    const resolvedName = customerName || (session.customer?.full_name || null);
+    const resolvedPhone = body.customerPhone || (session.customer?.phone || null);
+    const resolvedCity = body.customerCity || (session.customer?.city || null);
+    const resolvedProvince = body.customerProvince || (session.customer?.state || null);
+    const resolvedPostalCode = body.customerPostalCode || (session.customer?.postal_code || null);
+    const resolvedCountry = body.customerCountry || (session.customer?.country || null);
+
     const adminClient = getSupabaseAdmin();
 
     // 4. Create local order record in heca_orders (server-only table)
@@ -67,9 +79,22 @@ export async function POST(req: Request) {
           shipping: shipping,
           total: total,
           status: "CREATED",
-          customer_email: customerEmail || null,
-          customer_name: customerName || null,
-          shipping_address: shippingAddress || null,
+          customer_email: resolvedEmail,
+          customer_name: resolvedName,
+          customer_phone: resolvedPhone,
+          customer_city: resolvedCity,
+          customer_province: resolvedProvince,
+          customer_postal_code: resolvedPostalCode,
+          customer_country: resolvedCountry,
+          auth_user_id: authUserId,
+          shipping_address: shippingAddress || {
+            name: resolvedName,
+            phone: resolvedPhone,
+            city: resolvedCity,
+            province: resolvedProvince,
+            postal_code: resolvedPostalCode,
+            country: resolvedCountry,
+          },
         },
       ])
       .select()

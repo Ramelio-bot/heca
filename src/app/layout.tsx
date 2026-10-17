@@ -22,42 +22,53 @@ const bodoniModa = Bodoni_Moda({
   weight: ["400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://heca-official.vercel.app"),
-  title: "HECA | High-Fashion & Minimalist Editorial",
-  description: "HECA is a modern luxury fashion brand inspired by minimalist editorial style. Explore our latest collection of premium clothing, dresses, tops, and more.",
-  keywords: ["HECA", "Luxury Fashion", "Minimalist", "Editorial", "Designer Clothes", "Premium Brand"],
-  openGraph: {
-    title: "HECA | High-Fashion & Minimalist Editorial",
-    description: "Explore the latest collection of premium clothing, dresses, tops, and more.",
-    url: "https://heca-official.vercel.app",
-    siteName: "HECA",
-    images: [
-      {
-        url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=80",
-        width: 1200,
-        height: 630,
-        alt: "HECA Luxury Fashion",
-      },
-    ],
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "HECA | High-Fashion & Minimalist Editorial",
-    description: "HECA is a modern luxury fashion brand inspired by minimalist editorial style.",
-    images: ["https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=80"],
-  },
-};
+import { getSiteSettings, DEFAULT_SITE_SETTINGS } from "@/lib/siteSettings";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const meta = settings.site_meta || DEFAULT_SITE_SETTINGS.site_meta!;
+  return {
+    metadataBase: new URL("https://heca-official.vercel.app"),
+    title: meta.title,
+    description: meta.description,
+    keywords: meta.keywords ? meta.keywords.split(",").map(k => k.trim()) : ["HECA"],
+    openGraph: {
+      title: meta.title,
+      description: meta.description,
+      url: "https://heca-official.vercel.app",
+      siteName: "HECA",
+      images: [
+        {
+          url: meta.og_image,
+          width: 1200,
+          height: 630,
+          alt: meta.title,
+        },
+      ],
+      locale: "en_US",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: meta.title,
+      description: meta.description,
+      images: [meta.og_image],
+    },
+  };
+}
 
 import SplashScreen from "@/components/SplashScreen";
 
-export default function RootLayout({
+import { CustomerProvider } from "@/context/CustomerContext";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSiteSettings();
+  const announcement = settings.announcement;
+
   const jsonLdOrg = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -80,16 +91,35 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased font-sans bg-heca-bg text-heca-primary">
+        {announcement?.enabled && (
+          <div
+            className="w-full text-center text-[10px] uppercase tracking-[0.2em] py-2 px-4 sticky top-0 z-50 transition-colors"
+            style={{
+              backgroundColor: announcement.bg_color || "#111111",
+              color: announcement.text_color || "#EBE6DF",
+            }}
+          >
+            {announcement.link ? (
+              <a href={announcement.link} className="underline underline-offset-2 hover:opacity-80 transition-opacity">
+                {announcement.text}
+              </a>
+            ) : (
+              announcement.text
+            )}
+          </div>
+        )}
         <SplashScreen />
         <ProductProvider>
-          <CartProvider>
-            {children}
-            <Footer />
-            <QuickViewDrawer />
-            <HelpDrawer />
-            <MarketplaceModal />
-            <NavigationDrawer />
-          </CartProvider>
+          <CustomerProvider>
+            <CartProvider>
+              {children}
+              <Footer homeContent={settings.home_content} footerSettings={settings.footer} />
+              <QuickViewDrawer />
+              <HelpDrawer />
+              <MarketplaceModal />
+              <NavigationDrawer />
+            </CartProvider>
+          </CustomerProvider>
         </ProductProvider>
       </body>
     </html>

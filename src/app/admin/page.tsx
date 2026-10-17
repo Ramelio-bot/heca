@@ -132,6 +132,33 @@ export default function AdminDashboard() {
   const [slideType, setSlideType] = useState<"image" | "video">("image");
   const [slideUrl, setSlideUrl] = useState("");
 
+  // Website Settings Form States
+  const [announcementEnabled, setAnnouncementEnabled] = useState(false);
+  const [announcementText, setAnnouncementText] = useState("New Season — The Archive Is Being Refreshed");
+  const [announcementBgColor, setAnnouncementBgColor] = useState("#111111");
+  const [announcementTextColor, setAnnouncementTextColor] = useState("#EBE6DF");
+  const [announcementLink, setAnnouncementLink] = useState("");
+
+  const [seoTitle, setSeoTitle] = useState("HECA | High-Fashion & Minimalist Editorial");
+  const [seoDescription, setSeoDescription] = useState("HECA is a modern luxury fashion brand inspired by minimalist editorial style.");
+  const [seoKeywords, setSeoKeywords] = useState("HECA, Luxury Fashion, Minimalist, Editorial, Designer Clothes");
+  const [seoOgImage, setSeoOgImage] = useState("https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=80");
+
+  const [homeHeroTitle, setHomeHeroTitle] = useState("THE NEW");
+  const [homeHeroSubtitle, setHomeHeroSubtitle] = useState("Scroll Down");
+  const [homeArchiveTitle, setHomeArchiveTitle] = useState("The Archive");
+  const [homeArchiveSubtitle, setHomeArchiveSubtitle] = useState("Collection In Curation");
+  const [homeNewsletterTitle, setHomeNewsletterTitle] = useState("Join The Archive");
+  const [homeNewsletterText, setHomeNewsletterText] = useState("Subscribe to receive updates on new arrivals, special offers and other discount information.");
+
+  const [comingSoonTitle, setComingSoonTitle] = useState("Coming Soon");
+  const [comingSoonText, setComingSoonText] = useState("We are currently curating this experience. Please check back later for updates.");
+
+  const [footerTagline, setFooterTagline] = useState("HECA");
+  const [footerCopyright, setFooterCopyright] = useState("© 2026 HECA. ALL RIGHTS RESERVED.");
+
+  const [isSavingSiteSettings, setIsSavingSiteSettings] = useState(false);
+
   // Settings & Toast
   const [toastMessage, setToastMessage] = useState("");
   const [rateInput, setRateInput] = useState("");
@@ -140,6 +167,124 @@ export default function AdminDashboard() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
+  };
+
+  useEffect(() => {
+    async function loadSiteSettings() {
+      try {
+        const res = await fetch("/api/site-settings");
+        if (!res.ok) return;
+        const rows = await res.json();
+        const map: Record<string, any> = {};
+        (rows || []).forEach((r: any) => { map[r.key] = r.value; });
+
+        if (map.announcement) {
+          setAnnouncementEnabled(Boolean(map.announcement.enabled));
+          setAnnouncementText(map.announcement.text || "");
+          setAnnouncementBgColor(map.announcement.bg_color || "#111111");
+          setAnnouncementTextColor(map.announcement.text_color || "#EBE6DF");
+          setAnnouncementLink(map.announcement.link || "");
+        }
+        if (map.site_meta) {
+          setSeoTitle(map.site_meta.title || "");
+          setSeoDescription(map.site_meta.description || "");
+          setSeoKeywords(map.site_meta.keywords || "");
+          setSeoOgImage(map.site_meta.og_image || "");
+        }
+        if (map.home_content) {
+          setHomeHeroTitle(map.home_content.hero_title || "");
+          setHomeHeroSubtitle(map.home_content.hero_subtitle || "");
+          setHomeArchiveTitle(map.home_content.archive_title || "");
+          setHomeArchiveSubtitle(map.home_content.archive_subtitle || "");
+          setHomeNewsletterTitle(map.home_content.newsletter_title || "");
+          setHomeNewsletterText(map.home_content.newsletter_text || "");
+        }
+        if (map.coming_soon) {
+          setComingSoonTitle(map.coming_soon.title || "");
+          setComingSoonText(map.coming_soon.text || "");
+        }
+        if (map.footer) {
+          setFooterTagline(map.footer.tagline || "");
+          setFooterCopyright(map.footer.copyright || "");
+        }
+      } catch (err) {
+        console.error("Failed to fetch site settings in admin:", err);
+      }
+    }
+    loadSiteSettings();
+  }, []);
+
+  const saveSiteSettingKey = async (key: string, value: any) => {
+    setIsSavingSiteSettings(true);
+    try {
+      const res = await fetch("/api/site-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to save");
+      }
+      showToast(`Saved ${key.replace("_", " ")}`);
+    } catch (err: any) {
+      alert("Error saving setting: " + err.message);
+    } finally {
+      setIsSavingSiteSettings(false);
+    }
+  };
+
+  const saveAllSiteSettings = async () => {
+    setIsSavingSiteSettings(true);
+    try {
+      const payload = {
+        announcement: {
+          enabled: announcementEnabled,
+          text: announcementText,
+          bg_color: announcementBgColor,
+          text_color: announcementTextColor,
+          link: announcementLink.trim() || null,
+        },
+        site_meta: {
+          title: seoTitle,
+          description: seoDescription,
+          keywords: seoKeywords,
+          og_image: seoOgImage,
+        },
+        home_content: {
+          hero_title: homeHeroTitle,
+          hero_subtitle: homeHeroSubtitle,
+          archive_title: homeArchiveTitle,
+          archive_subtitle: homeArchiveSubtitle,
+          newsletter_title: homeNewsletterTitle,
+          newsletter_text: homeNewsletterText,
+        },
+        coming_soon: {
+          title: comingSoonTitle,
+          text: comingSoonText,
+        },
+        footer: {
+          tagline: footerTagline,
+          copyright: footerCopyright,
+        },
+      };
+
+      const res = await fetch("/api/site-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to save website settings");
+      }
+      showToast("All website settings saved successfully");
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    } finally {
+      setIsSavingSiteSettings(false);
+    }
   };
 
   useEffect(() => {
@@ -476,6 +621,9 @@ export default function AdminDashboard() {
         </a>
         <a href="#store-links-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
           🌐 Store & Marketplace Links
+        </a>
+        <a href="#website-settings-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
+          ⚙️ Website Settings & CMS
         </a>
         <a href="#fx-settings-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
           💵 Currency & Shipping
@@ -1030,6 +1178,417 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="website-settings-section" className="border-t border-heca-primary/20 pt-12 mb-12 scroll-mt-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h2 className="text-sm font-serif uppercase tracking-widest">WEBSITE SETTINGS & CMS CONTENT</h2>
+            <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 mt-1">
+              Manage live announcement banner, SEO meta tags, homepage titles, and editorial texts.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={saveAllSiteSettings}
+            disabled={isSavingSiteSettings}
+            className="w-full md:w-auto px-8 bg-heca-primary text-heca-bg py-3 text-xs uppercase tracking-[0.2em] hover:bg-heca-primary/90 transition-colors disabled:opacity-50"
+          >
+            {isSavingSiteSettings ? "Saving All..." : "Save All Website Settings"}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* SECTION A: ANNOUNCEMENT BANNER */}
+          <div className="bg-white p-8 border border-heca-primary/10 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xs font-serif uppercase tracking-widest">A. Announcement Banner</h3>
+                <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${announcementEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
+                  {announcementEnabled ? "Live / Active" : "Disabled"}
+                </span>
+              </div>
+
+              <div className="flex flex-col space-y-5">
+                <label className="flex items-center space-x-3 cursor-pointer py-1">
+                  <input
+                    type="checkbox"
+                    checked={announcementEnabled}
+                    onChange={(e) => setAnnouncementEnabled(e.target.checked)}
+                    className="w-4 h-4 accent-heca-primary cursor-pointer"
+                  />
+                  <span className="text-xs uppercase tracking-widest font-medium">Enable Announcement Banner</span>
+                </label>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Banner Announcement Text</label>
+                  <input
+                    type="text"
+                    value={announcementText}
+                    onChange={(e) => setAnnouncementText(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="New Season — The Archive Is Being Refreshed"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                    <label className="opacity-60">Background Color</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={announcementBgColor}
+                        onChange={(e) => setAnnouncementBgColor(e.target.value)}
+                        className="w-8 h-8 rounded border border-heca-primary/20 cursor-pointer p-0 bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={announcementBgColor}
+                        onChange={(e) => setAnnouncementBgColor(e.target.value)}
+                        className="flex-1 border-b border-heca-primary/30 py-1 outline-none focus:border-heca-primary bg-transparent text-xs font-mono uppercase"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                    <label className="opacity-60">Text Color</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={announcementTextColor}
+                        onChange={(e) => setAnnouncementTextColor(e.target.value)}
+                        className="w-8 h-8 rounded border border-heca-primary/20 cursor-pointer p-0 bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={announcementTextColor}
+                        onChange={(e) => setAnnouncementTextColor(e.target.value)}
+                        className="flex-1 border-b border-heca-primary/30 py-1 outline-none focus:border-heca-primary bg-transparent text-xs font-mono uppercase"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Destination Link (Optional)</label>
+                  <input
+                    type="text"
+                    value={announcementLink}
+                    onChange={(e) => setAnnouncementLink(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="https://... or #catalog"
+                  />
+                </div>
+
+                {/* Live Preview */}
+                <div className="pt-2">
+                  <label className="text-[9px] uppercase tracking-widest opacity-60 block mb-2">Live Banner Preview</label>
+                  <div
+                    className="w-full text-center text-[10px] uppercase tracking-[0.2em] py-2 px-4 transition-colors"
+                    style={{ backgroundColor: announcementBgColor, color: announcementTextColor }}
+                  >
+                    {announcementLink ? (
+                      <span className="underline underline-offset-2">{announcementText || "Banner Text Sample"}</span>
+                    ) : (
+                      announcementText || "Banner Text Sample"
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6 mt-6 border-t border-heca-primary/10">
+              <button
+                type="button"
+                onClick={() =>
+                  saveSiteSettingKey("announcement", {
+                    enabled: announcementEnabled,
+                    text: announcementText,
+                    bg_color: announcementBgColor,
+                    text_color: announcementTextColor,
+                    link: announcementLink.trim() || null,
+                  })
+                }
+                disabled={isSavingSiteSettings}
+                className="px-6 py-2 bg-heca-primary text-heca-bg text-[10px] uppercase tracking-widest hover:bg-heca-primary/90 transition-colors"
+              >
+                Save Announcement
+              </button>
+            </div>
+          </div>
+
+          {/* SECTION B: SEO & SITE META */}
+          <div className="bg-white p-8 border border-heca-primary/10 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xs font-serif uppercase tracking-widest">B. SEO / Site Meta</h3>
+              </div>
+
+              <div className="flex flex-col space-y-5">
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Meta Title</label>
+                  <input
+                    type="text"
+                    value={seoTitle}
+                    onChange={(e) => setSeoTitle(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="HECA | High-Fashion & Minimalist Editorial"
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Meta Description</label>
+                  <textarea
+                    rows={2}
+                    value={seoDescription}
+                    onChange={(e) => setSeoDescription(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs resize-none"
+                    placeholder="HECA is a modern luxury fashion brand..."
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Keywords (Comma Separated)</label>
+                  <input
+                    type="text"
+                    value={seoKeywords}
+                    onChange={(e) => setSeoKeywords(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="HECA, Luxury Fashion, Minimalist, Editorial"
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Open Graph Image URL</label>
+                  <input
+                    type="text"
+                    value={seoOgImage}
+                    onChange={(e) => setSeoOgImage(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                  <FileUploader onUpload={setSeoOgImage} accept="image/*" label="Or Upload OG Image" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6 mt-6 border-t border-heca-primary/10">
+              <button
+                type="button"
+                onClick={() =>
+                  saveSiteSettingKey("site_meta", {
+                    title: seoTitle,
+                    description: seoDescription,
+                    keywords: seoKeywords,
+                    og_image: seoOgImage,
+                  })
+                }
+                disabled={isSavingSiteSettings}
+                className="px-6 py-2 bg-heca-primary text-heca-bg text-[10px] uppercase tracking-widest hover:bg-heca-primary/90 transition-colors"
+              >
+                Save SEO Meta
+              </button>
+            </div>
+          </div>
+
+          {/* SECTION C: HOME CONTENT */}
+          <div className="bg-white p-8 border border-heca-primary/10 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xs font-serif uppercase tracking-widest">C. Home Editorial Content</h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Hero Title</label>
+                  <input
+                    type="text"
+                    value={homeHeroTitle}
+                    onChange={(e) => setHomeHeroTitle(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="THE NEW"
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Hero Subtitle</label>
+                  <input
+                    type="text"
+                    value={homeHeroSubtitle}
+                    onChange={(e) => setHomeHeroSubtitle(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="Scroll Down"
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Archive Section Title</label>
+                  <input
+                    type="text"
+                    value={homeArchiveTitle}
+                    onChange={(e) => setHomeArchiveTitle(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="The Archive"
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                  <label className="opacity-60">Archive Section Subtitle</label>
+                  <input
+                    type="text"
+                    value={homeArchiveSubtitle}
+                    onChange={(e) => setHomeArchiveSubtitle(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="Collection In Curation"
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest sm:col-span-2">
+                  <label className="opacity-60">Newsletter Title</label>
+                  <input
+                    type="text"
+                    value={homeNewsletterTitle}
+                    onChange={(e) => setHomeNewsletterTitle(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                    placeholder="Join The Archive"
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest sm:col-span-2">
+                  <label className="opacity-60">Newsletter Subtext</label>
+                  <textarea
+                    rows={2}
+                    value={homeNewsletterText}
+                    onChange={(e) => setHomeNewsletterText(e.target.value)}
+                    className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs resize-none"
+                    placeholder="Subscribe to receive updates on new arrivals..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6 mt-6 border-t border-heca-primary/10">
+              <button
+                type="button"
+                onClick={() =>
+                  saveSiteSettingKey("home_content", {
+                    hero_title: homeHeroTitle,
+                    hero_subtitle: homeHeroSubtitle,
+                    archive_title: homeArchiveTitle,
+                    archive_subtitle: homeArchiveSubtitle,
+                    newsletter_title: homeNewsletterTitle,
+                    newsletter_text: homeNewsletterText,
+                  })
+                }
+                disabled={isSavingSiteSettings}
+                className="px-6 py-2 bg-heca-primary text-heca-bg text-[10px] uppercase tracking-widest hover:bg-heca-primary/90 transition-colors"
+              >
+                Save Home Content
+              </button>
+            </div>
+          </div>
+
+          {/* SECTION D & E: COMING SOON + FOOTER */}
+          <div className="flex flex-col space-y-8">
+            {/* D. Coming Soon */}
+            <div className="bg-white p-8 border border-heca-primary/10 flex flex-col justify-between flex-1">
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xs font-serif uppercase tracking-widest">D. Coming Soon Page</h3>
+                </div>
+
+                <div className="flex flex-col space-y-5">
+                  <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                    <label className="opacity-60">Title</label>
+                    <input
+                      type="text"
+                      value={comingSoonTitle}
+                      onChange={(e) => setComingSoonTitle(e.target.value)}
+                      className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                      placeholder="Coming Soon"
+                    />
+                  </div>
+
+                  <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                    <label className="opacity-60">Description Text</label>
+                    <textarea
+                      rows={2}
+                      value={comingSoonText}
+                      onChange={(e) => setComingSoonText(e.target.value)}
+                      className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs resize-none"
+                      placeholder="We are currently curating this experience..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-6 mt-6 border-t border-heca-primary/10">
+                <button
+                  type="button"
+                  onClick={() =>
+                    saveSiteSettingKey("coming_soon", {
+                      title: comingSoonTitle,
+                      text: comingSoonText,
+                    })
+                  }
+                  disabled={isSavingSiteSettings}
+                  className="px-6 py-2 bg-heca-primary text-heca-bg text-[10px] uppercase tracking-widest hover:bg-heca-primary/90 transition-colors"
+                >
+                  Save Coming Soon
+                </button>
+              </div>
+            </div>
+
+            {/* E. Footer */}
+            <div className="bg-white p-8 border border-heca-primary/10 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xs font-serif uppercase tracking-widest">E. Footer</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                    <label className="opacity-60">Footer Big Tagline</label>
+                    <input
+                      type="text"
+                      value={footerTagline}
+                      onChange={(e) => setFooterTagline(e.target.value)}
+                      className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                      placeholder="HECA"
+                    />
+                  </div>
+
+                  <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+                    <label className="opacity-60">Copyright Notice</label>
+                    <input
+                      type="text"
+                      value={footerCopyright}
+                      onChange={(e) => setFooterCopyright(e.target.value)}
+                      className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs"
+                      placeholder="© 2026 HECA. ALL RIGHTS RESERVED."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-6 mt-6 border-t border-heca-primary/10">
+                <button
+                  type="button"
+                  onClick={() =>
+                    saveSiteSettingKey("footer", {
+                      tagline: footerTagline,
+                      copyright: footerCopyright,
+                    })
+                  }
+                  disabled={isSavingSiteSettings}
+                  className="px-6 py-2 bg-heca-primary text-heca-bg text-[10px] uppercase tracking-widest hover:bg-heca-primary/90 transition-colors"
+                >
+                  Save Footer
+                </button>
+              </div>
             </div>
           </div>
         </div>

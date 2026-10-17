@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { Product } from "@/context/ProductContext";
+import { useCustomer } from "@/context/CustomerContext";
 
 interface PaypalCheckoutProps {
   product: Product;
@@ -11,11 +12,33 @@ interface PaypalCheckoutProps {
 }
 
 export default function PaypalCheckout({ product, selectedSize, onClose }: PaypalCheckoutProps) {
+  const { customer, user, isAuthenticated } = useCustomer();
   const [config, setConfig] = useState<{ clientId: string; currency: string; mode: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successOrder, setSuccessOrder] = useState<{ orderId: string; total: number } | null>(null);
+
+  // Shipping Form States
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerPostalCode, setCustomerPostalCode] = useState("");
+
+  useEffect(() => {
+    if (customer) {
+      if (customer.full_name) setCustomerName(customer.full_name);
+      if (customer.phone) setCustomerPhone(customer.phone);
+      if (customer.address_line1) setCustomerAddress(customer.address_line1);
+      if (customer.city) setCustomerCity(customer.city);
+      if (customer.postal_code) setCustomerPostalCode(customer.postal_code);
+    }
+    if (user?.email) {
+      setCustomerEmail(user.email);
+    }
+  }, [customer, user]);
 
   useEffect(() => {
     fetch("/api/paypal/config")
@@ -38,6 +61,11 @@ export default function PaypalCheckout({ product, selectedSize, onClose }: Paypa
   const total = unitPrice + shipping;
 
   const handleCreateOrder = async () => {
+    if (!customerEmail.trim()) {
+      setErrorMessage("Please enter your email address for order confirmation.");
+      throw new Error("Email required");
+    }
+
     setIsProcessing(true);
     setErrorMessage(null);
     try {
@@ -48,6 +76,19 @@ export default function PaypalCheckout({ product, selectedSize, onClose }: Paypa
           productId: product.id,
           size: selectedSize || "M",
           qty: 1,
+          customerName: customerName.trim(),
+          customerEmail: customerEmail.trim(),
+          customerPhone: customerPhone.trim(),
+          customerCity: customerCity.trim(),
+          customerPostalCode: customerPostalCode.trim(),
+          shippingAddress: {
+            name: customerName.trim(),
+            email: customerEmail.trim(),
+            phone: customerPhone.trim(),
+            address: customerAddress.trim(),
+            city: customerCity.trim(),
+            postal_code: customerPostalCode.trim(),
+          },
         }),
       });
 
@@ -93,7 +134,7 @@ export default function PaypalCheckout({ product, selectedSize, onClose }: Paypa
 
   return (
     <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-[#EBE6DF] text-[#111111] max-w-md w-full p-8 shadow-2xl relative border border-[#111111]/10">
+      <div className="bg-[#EBE6DF] text-[#111111] max-w-md w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl relative border border-[#111111]/10">
         <button
           onClick={onClose}
           disabled={isProcessing}
@@ -150,6 +191,70 @@ export default function PaypalCheckout({ product, selectedSize, onClose }: Paypa
               <div className="flex justify-between font-bold pt-2 border-t border-[#111111]/10 text-sm">
                 <span>Total</span>
                 <span>${total.toFixed(2)} USD</span>
+              </div>
+            </div>
+
+            {/* Delivery Details Form */}
+            <div className="mb-6 space-y-3">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[10px] uppercase tracking-widest font-bold">Delivery Details</span>
+                {isAuthenticated ? (
+                  <span className="text-[9px] uppercase tracking-wider text-green-800 bg-green-100 px-2 py-0.5 font-medium">
+                    Profile Linked
+                  </span>
+                ) : (
+                  <a
+                    href="/login?redirect=/"
+                    className="text-[9px] uppercase tracking-widest opacity-60 hover:opacity-100 underline underline-offset-2"
+                  >
+                    Log In
+                  </a>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-left">
+                <input
+                  type="text"
+                  placeholder="Full Name *"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="col-span-2 border-b border-[#111111]/30 py-1.5 outline-none focus:border-[#111111] bg-transparent text-xs placeholder:text-[#111111]/40"
+                />
+                <input
+                  type="email"
+                  placeholder="Email Address *"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  className="col-span-1 border-b border-[#111111]/30 py-1.5 outline-none focus:border-[#111111] bg-transparent text-xs placeholder:text-[#111111]/40"
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone Number"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="col-span-1 border-b border-[#111111]/30 py-1.5 outline-none focus:border-[#111111] bg-transparent text-xs placeholder:text-[#111111]/40"
+                />
+                <input
+                  type="text"
+                  placeholder="Delivery Address *"
+                  value={customerAddress}
+                  onChange={(e) => setCustomerAddress(e.target.value)}
+                  className="col-span-2 border-b border-[#111111]/30 py-1.5 outline-none focus:border-[#111111] bg-transparent text-xs placeholder:text-[#111111]/40"
+                />
+                <input
+                  type="text"
+                  placeholder="City"
+                  value={customerCity}
+                  onChange={(e) => setCustomerCity(e.target.value)}
+                  className="col-span-1 border-b border-[#111111]/30 py-1.5 outline-none focus:border-[#111111] bg-transparent text-xs placeholder:text-[#111111]/40"
+                />
+                <input
+                  type="text"
+                  placeholder="Postal Code"
+                  value={customerPostalCode}
+                  onChange={(e) => setCustomerPostalCode(e.target.value)}
+                  className="col-span-1 border-b border-[#111111]/30 py-1.5 outline-none focus:border-[#111111] bg-transparent text-xs placeholder:text-[#111111]/40"
+                />
               </div>
             </div>
 

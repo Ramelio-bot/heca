@@ -5,7 +5,14 @@ import Link from "next/link";
 import { useProduct } from "@/context/ProductContext";
 import { useCart } from "@/context/CartContext";
 
-export default function Footer() {
+import { HomeContentSetting, FooterSetting } from "@/lib/siteSettings";
+
+interface FooterProps {
+  homeContent?: HomeContentSetting;
+  footerSettings?: FooterSetting;
+}
+
+export default function Footer({ homeContent, footerSettings }: FooterProps) {
   const { storeLinks, setFilter } = useProduct();
   const { setIsHelpOpen } = useCart();
 
@@ -29,9 +36,11 @@ export default function Footer() {
         {/* Top Section: Newsletter & Tagline */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
           <div className="max-w-md w-full">
-            <h3 className="text-sm font-medium uppercase tracking-widest mb-6">Join The Archive</h3>
+            <h3 className="text-sm font-medium uppercase tracking-widest mb-6">
+              {homeContent?.newsletter_title || "Join The Archive"}
+            </h3>
             <p className="text-xs opacity-60 mb-8 leading-relaxed">
-              Subscribe to receive updates on new arrivals, special offers and other discount information.
+              {homeContent?.newsletter_text || "Subscribe to receive updates on new arrivals, special offers and other discount information."}
             </p>
             <div className="relative group">
               <input 
@@ -47,7 +56,7 @@ export default function Footer() {
           
           <div className="text-left md:text-right hidden md:block">
             <h1 className="font-serif text-5xl md:text-7xl font-black tracking-tighter uppercase opacity-10">
-              HECA
+              {footerSettings?.tagline || "HECA"}
             </h1>
           </div>
         </div>
@@ -86,7 +95,7 @@ export default function Footer() {
 
         {/* Bottom Section: Copyright */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-heca-primary/10 text-[9px] uppercase tracking-widest opacity-40">
-          <p>© {new Date().getFullYear()} HECA. ALL RIGHTS RESERVED.</p>
+          <p>{footerSettings?.copyright || `© ${new Date().getFullYear()} HECA. ALL RIGHTS RESERVED.`}</p>
           <div className="flex space-x-6">
             <a href="#" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
             <a href="#" className="hover:opacity-100 transition-opacity">Terms of Use</a>
