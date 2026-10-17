@@ -3,7 +3,7 @@
 HECA is a luxury contemporary e-commerce and editorial archive web application built with **Next.js 16.3.0 (App Router + Turbopack)**, **React 19**, **Tailwind CSS v4**, **TypeScript 5**, and **Supabase**. It features real-time catalog management, 6 international and domestic marketplace channels, direct PayPal REST API v2 checkout, server-side admin authentication with rate-limiting, dynamic SEO with individual product archive routes, and bespoke high-fashion aesthetic layouts.
 
 - **Production Live URL**: [https://heca-official.vercel.app](https://heca-official.vercel.app)
-- **Supabase Project ID**: `xrzdcqnezhcezitolkuu`
+- **Supabase Project ID**: `svvnchgufejiypdzhwgy`
 
 ---
 
@@ -41,7 +41,7 @@ Copy `.env.example` to `.env.local` and configure your credentials:
 
 ```env
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://xrzdcqnezhcezitolkuu.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://svvnchgufejiypdzhwgy.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
@@ -106,15 +106,15 @@ Database migration files are located in `supabase/migrations/` and must be appli
 
 ### Applying Migrations via CLI:
 ```bash
-npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/001_heca_products_full_schema.sql
-npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/002_heca_settings_and_slides.sql
-npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/003_heca_orders.sql
-npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/004_heca_admins.sql
-npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/005_rls_lockdown.sql
-npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/006_marketplace_channels.sql
-npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/007_storage_heca_media.sql
-npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/008_drop_public_read_admins.sql
-npx supabase db query --linked --project-ref xrzdcqnezhcezitolkuu -f supabase/migrations/009_login_rate_limit.sql
+npx supabase db query --linked --project-ref svvnchgufejiypdzhwgy -f supabase/migrations/001_heca_products_full_schema.sql
+npx supabase db query --linked --project-ref svvnchgufejiypdzhwgy -f supabase/migrations/002_heca_settings_and_slides.sql
+npx supabase db query --linked --project-ref svvnchgufejiypdzhwgy -f supabase/migrations/003_heca_orders.sql
+npx supabase db query --linked --project-ref svvnchgufejiypdzhwgy -f supabase/migrations/004_heca_admins.sql
+npx supabase db query --linked --project-ref svvnchgufejiypdzhwgy -f supabase/migrations/005_rls_lockdown.sql
+npx supabase db query --linked --project-ref svvnchgufejiypdzhwgy -f supabase/migrations/006_marketplace_channels.sql
+npx supabase db query --linked --project-ref svvnchgufejiypdzhwgy -f supabase/migrations/007_storage_heca_media.sql
+npx supabase db query --linked --project-ref svvnchgufejiypdzhwgy -f supabase/migrations/008_drop_public_read_admins.sql
+npx supabase db query --linked --project-ref svvnchgufejiypdzhwgy -f supabase/migrations/009_login_rate_limit.sql
 ```
 
 ---
