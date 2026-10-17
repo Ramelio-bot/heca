@@ -171,7 +171,7 @@ export default function NavigationDrawer() {
                       className="flex items-center gap-4 p-3 hover:bg-heca-primary/5 transition-colors border-b border-heca-primary/10 last:border-b-0 text-left"
                     >
                       <div className="relative w-10 h-12 flex-shrink-0 bg-heca-primary/10">
-                        <Image src={product.image} alt={product.name} fill className="object-cover" />
+                        <Image src={product.image} alt={product.name} fill loading="lazy" className="object-cover" />
                       </div>
                       <div className="flex flex-col flex-1 truncate">
                         <span className="truncate">{product.name}</span>
@@ -240,6 +240,7 @@ export default function NavigationDrawer() {
                               src={item.image}
                               alt={item.label}
                               fill
+                              loading="lazy"
                               className="object-cover group-hover:scale-105 transition-transform duration-700"
                               sizes="200px"
                             />

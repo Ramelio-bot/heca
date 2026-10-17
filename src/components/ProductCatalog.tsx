@@ -144,6 +144,8 @@ export default function ProductCatalog() {
                   alt={product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
+                  loading={i < 3 ? "eager" : "lazy"}
+                  priority={i < 3}
                   className={`object-cover object-center transition-all duration-[1500ms] ease-out group-hover:scale-105 ${
                     product.hoverImage ? "group-hover:opacity-0" : ""
                   }`}
@@ -165,6 +167,7 @@ export default function ProductCatalog() {
                     alt={`${product.name} alternate view`}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
+                    loading="lazy"
                     className="object-cover object-center absolute inset-0 opacity-0 transition-all duration-[1500ms] ease-out group-hover:opacity-100 group-hover:scale-105"
                   />
                 ) : null}

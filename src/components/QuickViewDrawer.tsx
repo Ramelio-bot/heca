@@ -132,6 +132,7 @@ export default function QuickViewDrawer() {
                     src={currentMedia.src}
                     alt={selectedProduct.name}
                     fill
+                    loading="lazy"
                     className={`object-cover transition-transform duration-300 ease-out ${isZoomed ? "scale-[1.8]" : "scale-100"}`}
                     style={isZoomed ? { transformOrigin: `${mousePos.x}% ${mousePos.y}%` } : undefined}
                     sizes="(max-width: 768px) 100vw, 600px"
