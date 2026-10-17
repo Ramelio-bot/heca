@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { MOCK_PRODUCTS_50 } from "../src/data/mockProducts";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -29,7 +28,7 @@ if (!supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function seed() {
-  console.log("Seeding products to Supabase...");
+  console.log("HECA Seeder — Supabase Products Ingestion");
   console.log(`Connecting to: ${supabaseUrl}`);
 
   const isReset = process.argv.includes("--reset") || process.argv.includes("--fresh");
@@ -43,7 +42,37 @@ async function seed() {
 
     if (deleteError) {
       console.warn("Notice during delete:", deleteError.message);
+    } else {
+      console.log("Catalog cleared successfully.");
     }
+  }
+
+  // Check for external JSON or CSV file parameter
+  const fileArg = process.argv.find(arg => arg.endsWith(".json") || arg.endsWith(".csv"));
+  let productsToInsert: any[] = [];
+
+  if (fileArg && fs.existsSync(fileArg)) {
+    console.log(`Loading external dataset from: ${fileArg}`);
+    try {
+      if (fileArg.endsWith(".json")) {
+        const raw = fs.readFileSync(fileArg, "utf-8");
+        productsToInsert = JSON.parse(raw);
+      }
+    } catch (parseErr: any) {
+      console.error(`Failed to parse ${fileArg}:`, parseErr.message);
+    }
+  } else {
+    console.log("No external dataset provided. To seed products from file, run:");
+    console.log("  npx tsx scripts/seed.ts path/to/products.json [--reset]");
+  }
+
+  if (productsToInsert.length === 0) {
+    console.log("No products to seed.");
+    const { count } = await supabase
+      .from("heca_products")
+      .select("*", { count: "exact", head: true });
+    console.log(`Current total products in database: ${count ?? 0}`);
+    return;
   }
 
   // Fetch current products to perform safe upsert by name
@@ -59,16 +88,18 @@ async function seed() {
   const existingMap = new Map<string, number>();
   currentProducts?.forEach(p => existingMap.set(p.name, p.id));
 
-  // Map 50 mock products to Supabase columns
-  const rows = MOCK_PRODUCTS_50.map((p, index) => {
-    const images = [p.image, p.hoverImage].filter(Boolean);
-    return {
+  let insertedCount = 0;
+  let updatedCount = 0;
+
+  for (const [index, p] of productsToInsert.entries()) {
+    const images = Array.isArray(p.images) ? p.images : [p.image, p.hoverImage].filter(Boolean);
+    const row = {
       name: p.name,
-      price: p.price,
+      price: Number(p.price),
       display_price: p.displayPrice || `$${p.price}`,
       images: images,
-      category: p.category,
-      sub_category: p.subCategory,
+      category: p.category || "WOMAN",
+      sub_category: p.subCategory || "DRESSES",
       span: p.span || "col-span-12 md:col-span-4",
       height: p.height || "h-[60vh]",
       sizes: p.sizes && p.sizes.length > 0 ? p.sizes : ["S", "M", "L"],
@@ -81,17 +112,14 @@ async function seed() {
       shopee_url: p.shopeeUrl || null,
       tokopedia_url: p.tokopediaUrl || null,
       tiktok_url: p.tiktokUrl || null,
-      sort_order: index + 1,
+      etsy_url: p.etsyUrl || null,
+      amazon_url: p.amazonUrl || null,
+      alibaba_url: p.alibabaUrl || null,
+      sort_order: p.sortOrder || index + 1,
     };
-  });
 
-  let insertedCount = 0;
-  let updatedCount = 0;
-
-  for (const row of rows) {
     const existingId = existingMap.get(row.name);
     if (existingId) {
-      // Update existing mock item
       const { error: updErr } = await supabase
         .from("heca_products")
         .update(row)
@@ -103,7 +131,6 @@ async function seed() {
         updatedCount++;
       }
     } else {
-      // Insert new item
       const { error: insErr } = await supabase
         .from("heca_products")
         .insert([row]);
@@ -118,7 +145,6 @@ async function seed() {
 
   console.log(`Seeding summary: ${insertedCount} inserted, ${updatedCount} updated.`);
 
-  // Verify total count
   const { count, error: countError } = await supabase
     .from("heca_products")
     .select("*", { count: "exact", head: true });

@@ -43,12 +43,22 @@ export default function AdminDashboard() {
         .from('heca-media')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (!uploadError) {
+        const { data } = supabase.storage
+          .from('heca-media')
+          .getPublicUrl(fileName);
+        return data.publicUrl;
+      }
 
-      const { data } = supabase.storage
-        .from('heca-media')
-        .getPublicUrl(fileName);
-
+      // Fallback via authenticated admin upload route
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || uploadError.message);
       return data.publicUrl;
     } catch (error: any) {
       alert("Error uploading file: " + error.message);
@@ -175,6 +185,11 @@ export default function AdminDashboard() {
         if (!d.authenticated) {
           router.replace("/admin/login");
           return;
+        }
+        if (d.token) {
+          try {
+            supabase.auth.setSession({ access_token: d.token, refresh_token: "" });
+          } catch {}
         }
         setIsAuth(true);
       })

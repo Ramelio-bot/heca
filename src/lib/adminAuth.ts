@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
-import { supabase } from "./supabaseClient";
+import { supabase, getSupabaseAdmin } from "./supabaseClient";
 
-export async function verifyAdminSession(req?: Request): Promise<{ authenticated: boolean; email?: string }> {
+export async function verifyAdminSession(req?: Request): Promise<{ authenticated: boolean; email?: string; token?: string }> {
   let token: string | undefined;
 
   if (req) {
@@ -38,7 +38,8 @@ export async function verifyAdminSession(req?: Request): Promise<{ authenticated
     }
 
     // Verify user is an authorized admin
-    const { data: adminRecord } = await supabase
+    const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? getSupabaseAdmin() : supabase;
+    const { data: adminRecord } = await adminClient
       .from("heca_admins")
       .select("email")
       .eq("email", user.email)
@@ -48,7 +49,7 @@ export async function verifyAdminSession(req?: Request): Promise<{ authenticated
       return { authenticated: false };
     }
 
-    return { authenticated: true, email: user.email };
+    return { authenticated: true, email: user.email, token };
   } catch {
     return { authenticated: false };
   }

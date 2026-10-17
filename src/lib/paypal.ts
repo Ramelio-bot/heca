@@ -3,6 +3,10 @@ const PAYPAL_BASE_URL = PAYPAL_MODE === "live"
   ? "https://api-m.paypal.com"
   : "https://api-m.sandbox.paypal.com";
 
+export function isPayPalConfigured(): boolean {
+  return !!(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);
+}
+
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 export async function getPayPalAccessToken(): Promise<string> {

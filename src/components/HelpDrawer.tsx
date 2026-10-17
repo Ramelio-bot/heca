@@ -3,9 +3,11 @@
 import React, { useState } from "react";
 import { X, ChevronDown, ChevronUp } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useProduct } from "@/context/ProductContext";
 
 export default function HelpDrawer() {
   const { isHelpOpen, setIsHelpOpen } = useCart();
+  const { storeLinks } = useProduct();
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
@@ -34,7 +36,7 @@ export default function HelpDrawer() {
     {
       id: "orders",
       title: "ORDER STATUS",
-      content: "You can track your order directly through the marketplace platform (Shopee/Tokopedia/TikTok) where you made the purchase, using the tracking number provided in your transaction details."
+      content: "You can track your order directly through the marketplace platform (Shopee, Tokopedia, TikTok Shop, Etsy, Amazon, Alibaba) where you made the purchase, using the tracking number provided in your transaction details."
     }
   ];
 
@@ -113,12 +115,12 @@ export default function HelpDrawer() {
           <div className="bg-white p-6 border border-heca-primary/10 flex flex-col space-y-6">
             <h3 className="text-sm font-serif uppercase tracking-widest text-center">Contact Us</h3>
             <a 
-              href="https://wa.me/6281234567890?text=Hello%20HECA%20Client%20Care" 
-              target="_blank" 
-              rel="noopener noreferrer"
+              href={storeLinks?.clientService || "mailto:care@heca.com"} 
+              target={storeLinks?.clientService?.startsWith("http") ? "_blank" : undefined}
+              rel={storeLinks?.clientService?.startsWith("http") ? "noopener noreferrer" : undefined}
               className="w-full bg-[#25D366] text-white py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#20b858] transition-colors"
             >
-              Chat via WhatsApp
+              Client Care Service
             </a>
             <a 
               href="mailto:care@heca.com" 

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabase, getSupabaseAdmin } from "@/lib/supabaseClient";
-import { createPayPalOrder } from "@/lib/paypal";
+import { createPayPalOrder, isPayPalConfigured } from "@/lib/paypal";
 
 export async function POST(req: Request) {
-  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+  if (!isPayPalConfigured()) {
     return NextResponse.json(
       { error: "PayPal credentials are not configured on server (503 Service Unavailable)." },
       { status: 503 }

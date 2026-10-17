@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("admin@heca.com");
@@ -28,6 +29,12 @@ export default function AdminLogin() {
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Login failed");
+      }
+
+      if (data.token) {
+        try {
+          await supabase.auth.setSession({ access_token: data.token, refresh_token: "" });
+        } catch {}
       }
 
       router.push("/admin");

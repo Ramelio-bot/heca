@@ -9,5 +9,6 @@ export async function GET(req: Request) {
   return NextResponse.json({
     authenticated: true,
     email: auth.email,
+    token: auth.token,
   });
 }
