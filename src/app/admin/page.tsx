@@ -455,10 +455,10 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen w-full bg-heca-bg text-heca-primary font-sans p-6 md:p-12">
       {/* Header */}
-      <div className="flex justify-between items-end border-b border-heca-primary/20 pb-6 mb-12">
+      <div className="flex justify-between items-end border-b border-heca-primary/20 pb-6 mb-8">
         <div>
           <h1 className="text-4xl font-serif tracking-widest uppercase">HECA</h1>
-          <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 mt-2">Admin Dashboard / Product Management</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 mt-2">Admin Dashboard / Store & Catalog Management</p>
         </div>
         <div className="flex gap-6 text-[10px] uppercase tracking-widest">
           <Link href="/" className="hover:opacity-60 transition-opacity">View Store</Link>
@@ -466,7 +466,23 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
+      {/* Quick Navigation Anchor Bar */}
+      <div className="flex gap-3 pb-6 mb-12 border-b border-heca-primary/10 overflow-x-auto text-[10px] uppercase tracking-widest">
+        <a href="#products-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
+          📦 Products ({products.length})
+        </a>
+        <a href="#banner-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
+          🎬 Hero Banner / Slides ({heroSlides.length})
+        </a>
+        <a href="#store-links-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
+          🌐 Store & Marketplace Links
+        </a>
+        <a href="#fx-settings-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
+          💵 Currency & Shipping
+        </a>
+      </div>
+
+      <div id="products-section" className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20 scroll-mt-8">
         
         {/* ADD / EDIT PRODUCT FORM (col-span-4) */}
         <div className="lg:col-span-4 bg-white p-8 border border-heca-primary/10 h-fit">
@@ -867,7 +883,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="border-t border-heca-primary/20 pt-12 mb-12">
+      <div id="store-links-section" className="border-t border-heca-primary/20 pt-12 mb-12 scroll-mt-8">
         <h2 className="text-sm font-serif uppercase tracking-widest mb-6">OFFICIAL STORE GENERAL LINKS</h2>
         <form onSubmit={handleStoreLinksSubmit} className="bg-white p-8 border border-heca-primary/10 flex flex-col space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -927,7 +943,7 @@ export default function AdminDashboard() {
         </form>
       </div>
 
-      <div className="border-t border-heca-primary/20 pt-12">
+      <div id="banner-section" className="border-t border-heca-primary/20 pt-12 mb-12 scroll-mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* ADD SLIDE FORM */}
           <div className="lg:col-span-4 bg-white p-8 border border-heca-primary/10 h-fit">
@@ -1019,7 +1035,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="border-t border-heca-primary/20 pt-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 pb-24">
+      <div id="fx-settings-section" className="border-t border-heca-primary/20 pt-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 pb-24 scroll-mt-8">
         
         {/* FX Rate & Shipping Settings */}
         <form onSubmit={handleRateSave} className="flex flex-col sm:flex-row gap-4 items-end">
