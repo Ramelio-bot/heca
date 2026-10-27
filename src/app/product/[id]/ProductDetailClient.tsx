@@ -14,13 +14,58 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   );
   const [currentMediaIdx, setCurrentMediaIdx] = useState(0);
   const [isPaypalOpen, setIsPaypalOpen] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
-  const allMedia = [
-    { type: "image", src: product.image },
-    product.videoUrl ? { type: "video", src: product.videoUrl } : null,
-    product.hoverImage ? { type: "image", src: product.hoverImage } : null,
-    ...(product.gallery || []).map((g) => ({ type: "image", src: g })),
-  ].filter(Boolean) as { type: "image" | "video"; src: string }[];
+  // Deduplicate and assemble all media items
+  const allMedia = React.useMemo(() => {
+    const list: { type: "image" | "video"; src: string }[] = [];
+    if (product.videoUrl) {
+      list.push({ type: "video", src: product.videoUrl });
+    }
+    const raw: string[] = [];
+    if (product.gallery && product.gallery.length > 0) {
+      raw.push(...product.gallery);
+    } else {
+      if (product.image) raw.push(product.image);
+      if (product.hoverImage) raw.push(product.hoverImage);
+    }
+    const seen = new Set<string>();
+    for (const img of raw) {
+      const trimmed = img?.trim();
+      if (trimmed && !seen.has(trimmed)) {
+        seen.add(trimmed);
+        list.push({ type: "image", src: trimmed });
+      }
+    }
+    return list.length > 0 ? list : [{ type: "image" as const, src: product.image }];
+  }, [product]);
+
+  const mediaCount = allMedia.length;
+
+  const nextSlide = () => {
+    if (mediaCount <= 1) return;
+    setCurrentMediaIdx((prev) => (prev + 1) % mediaCount);
+  };
+
+  const prevSlide = () => {
+    if (mediaCount <= 1) return;
+    setCurrentMediaIdx((prev) => (prev - 1 + mediaCount) % mediaCount);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (diff > 40) {
+      prevSlide();
+    } else if (diff < -40) {
+      nextSlide();
+    }
+    setTouchStartX(null);
+  };
 
   const currentMedia = allMedia[currentMediaIdx] || allMedia[0];
   const finalPrice = product.discountPercent
@@ -32,7 +77,11 @@ export default function ProductDetailClient({ product }: { product: Product }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
         {/* Media Gallery (col-span-7) */}
         <div className="lg:col-span-7 flex flex-col space-y-4">
-          <div className="relative w-full aspect-[3/4] bg-[#e0d9d0] overflow-hidden">
+          <div 
+            className="relative w-full aspect-[3/4] bg-[#e0d9d0] overflow-hidden select-none group"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             {currentMedia.type === "video" ? (
               <video
                 src={currentMedia.src}
@@ -49,8 +98,39 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 60vw"
-                className="object-cover"
+                className="object-cover transition-opacity duration-300"
               />
+            )}
+
+            {/* Navigation Arrows for sliding */}
+            {mediaCount > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={prevSlide}
+                  aria-label="Previous image"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-black flex items-center justify-center shadow-md backdrop-blur-sm transition-all hover:scale-105 active:scale-95"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={nextSlide}
+                  aria-label="Next image"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-black flex items-center justify-center shadow-md backdrop-blur-sm transition-all hover:scale-105 active:scale-95"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                <div className="absolute bottom-4 right-4 z-10 bg-black/60 backdrop-blur-sm text-white px-3 py-1 text-xs font-mono tracking-wider rounded">
+                  {currentMediaIdx + 1} / {mediaCount}
+                </div>
+              </>
             )}
 
             {/* Badges */}

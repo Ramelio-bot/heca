@@ -17,6 +17,9 @@ interface UIContextType {
   setIsQuickViewOpen: (open: boolean) => void;
   selectedProduct: Product | null;
   setSelectedProduct: (product: Product | null) => void;
+  quickViewInitialIndex: number;
+  setQuickViewInitialIndex: (index: number) => void;
+  openQuickView: (product: Product, initialIndex?: number) => void;
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   fxRate: number;
@@ -32,6 +35,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isMarketplaceModalOpen, setMarketplaceModalOpen] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [quickViewInitialIndex, setQuickViewInitialIndex] = useState<number>(0);
   const [currency, setCurrency] = useState<Currency>("USD");
   const [fxRate, setFxRate] = useState<number>(15500);
 
@@ -78,6 +82,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const openQuickView = (product: Product, initialIndex: number = 0) => {
+    setSelectedProduct(product);
+    setQuickViewInitialIndex(initialIndex);
+    setIsQuickViewOpen(true);
+  };
+
   return (
     <UIContext.Provider
       value={{
@@ -91,6 +101,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setIsQuickViewOpen,
         selectedProduct,
         setSelectedProduct,
+        quickViewInitialIndex,
+        setQuickViewInitialIndex,
+        openQuickView,
         currency,
         setCurrency,
         fxRate,
