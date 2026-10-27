@@ -21,6 +21,7 @@ function CatalogProductCard({
   const [isHovered, setIsHovered] = useState(false);
   const [selectedSize, setSelectedSize] = useState<ProductSize | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [hasSwiped, setHasSwiped] = useState(false);
 
   // Extract unique images in order
   const images = useMemo(() => {
@@ -59,15 +60,19 @@ function CatalogProductCard({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.targetTouches[0].clientX);
+    setHasSwiped(false);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX === null) return;
     const diff = e.changedTouches[0].clientX - touchStartX;
-    if (diff > 35) {
-      prevSlide();
-    } else if (diff < -35) {
-      nextSlide();
+    if (Math.abs(diff) > 25) {
+      setHasSwiped(true);
+      if (diff > 35) {
+        prevSlide();
+      } else if (diff < -35) {
+        nextSlide();
+      }
     }
     setTouchStartX(null);
   };
@@ -83,6 +88,10 @@ function CatalogProductCard({
   };
 
   const handleCardClick = () => {
+    if (hasSwiped) {
+      setHasSwiped(false);
+      return;
+    }
     onQuickView(product, getInitialQuickViewIdx());
   };
 
@@ -101,6 +110,7 @@ function CatalogProductCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
+        setCurrentIdx(0);
       }}
       onClick={handleCardClick}
     >

@@ -78,15 +78,21 @@ export default function QuickViewDrawer() {
   };
 
   const onImageTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
     setImageTouchStartX(e.targetTouches[0].clientX);
   };
 
+  const onImageTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
   const onImageTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
     if (imageTouchStartX === null) return;
     const diff = e.changedTouches[0].clientX - imageTouchStartX;
-    if (diff > 40) {
+    if (diff > 35) {
       prevImage();
-    } else if (diff < -40) {
+    } else if (diff < -35) {
       nextImage();
     }
     setImageTouchStartX(null);
@@ -172,6 +178,7 @@ export default function QuickViewDrawer() {
               <div 
                 className="relative flex-shrink-0 w-full aspect-[3/4] bg-heca-primary/5 mb-4 overflow-hidden cursor-crosshair group select-none"
                 onTouchStart={onImageTouchStart}
+                onTouchMove={onImageTouchMove}
                 onTouchEnd={onImageTouchEnd}
                 onMouseEnter={() => {
                   if (window.innerWidth >= 768) setIsZoomed(true);
