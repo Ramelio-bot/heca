@@ -36,21 +36,6 @@ export default function AdminDashboard() {
   const handleFileUpload = async (file: File): Promise<string | null> => {
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('heca-media')
-        .upload(fileName, file);
-
-      if (!uploadError) {
-        const { data } = supabase.storage
-          .from('heca-media')
-          .getPublicUrl(fileName);
-        return data.publicUrl;
-      }
-
-      // Fallback via authenticated admin upload route
       const formData = new FormData();
       formData.append("file", file);
       const res = await fetch("/api/admin/upload", {
@@ -58,9 +43,17 @@ export default function AdminDashboard() {
         body: formData,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || uploadError.message);
+      if (!res.ok) {
+        if (res.status === 401) {
+          alert("Sesi login admin telah berakhir. Silakan login kembali.");
+          router.push("/admin/login");
+          return null;
+        }
+        throw new Error(data.error || "Gagal mengunggah file.");
+      }
       return data.publicUrl;
     } catch (error: any) {
+      console.error("Upload error:", error);
       alert("Error uploading file: " + error.message);
       return null;
     } finally {
@@ -68,26 +61,32 @@ export default function AdminDashboard() {
     }
   };
 
-  const FileUploader = ({ onUpload, accept = "image/*", label = "Upload File" }: { onUpload: (url: string) => void, accept?: string, label?: string }) => (
-    <div className="relative mt-2">
-      <input 
-        type="file" 
-        accept={accept}
-        disabled={isUploading}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            const url = await handleFileUpload(file);
-            if (url) onUpload(url);
-          }
-        }}
-      />
-      <div className={`w-full py-2 border border-dashed border-heca-primary/30 text-center text-[10px] uppercase tracking-widest ${isUploading ? 'opacity-50' : 'hover:bg-heca-primary/5'} transition-colors`}>
-        {isUploading ? "Uploading..." : label}
+  const FileUploader = ({ onUpload, accept = "image/*", label = "Upload File" }: { onUpload: (url: string) => void, accept?: string, label?: string }) => {
+    const [uploadingSelf, setUploadingSelf] = useState(false);
+    return (
+      <div className="relative mt-2">
+        <input 
+          type="file" 
+          accept={accept}
+          disabled={isUploading || uploadingSelf}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              setUploadingSelf(true);
+              const url = await handleFileUpload(file);
+              setUploadingSelf(false);
+              if (url) onUpload(url);
+              e.target.value = "";
+            }
+          }}
+        />
+        <div className={`w-full py-2.5 border border-dashed border-heca-primary/30 text-center text-[10px] uppercase tracking-widest ${uploadingSelf ? 'opacity-50 animate-pulse bg-heca-primary/5 font-semibold' : 'hover:bg-heca-primary/5'} transition-colors`}>
+          {uploadingSelf ? "Uploading..." : label}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
   // Form States
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -96,11 +95,34 @@ export default function AdminDashboard() {
   const [subCategory, setSubCategory] = useState("DRESSES");
   const [isAddingSubCategory, setIsAddingSubCategory] = useState(false);
   const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
-  const [hoverImage, setHoverImage] = useState("");
+  const [productImages, setProductImages] = useState<string[]>(["", "", "", "", ""]);
+  const image = productImages[0] || "";
+  const hoverImage = productImages[1] || "";
+
+  const updateProductImage = (index: number, val: string) => {
+    setProductImages(prev => {
+      const next = [...prev];
+      next[index] = val;
+      return next;
+    });
+  };
+
+  const removeProductImage = (index: number) => {
+    setProductImages(prev => {
+      if (prev.length <= 5) {
+        const next = [...prev];
+        next[index] = "";
+        return next;
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const addProductImageSlot = () => {
+    setProductImages(prev => [...prev, ""]);
+  };
   const [videoUrl, setVideoUrl] = useState("");
   const [sizeGuideUrl, setSizeGuideUrl] = useState("");
-  const [gallery, setGallery] = useState<string[]>([]);
   const [sizes, setSizes] = useState<ProductSize[]>(["M"]);
   const [isNew, setIsNew] = useState(false);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
@@ -384,8 +406,11 @@ export default function AdminDashboard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price || !image || sizes.length === 0) {
-      return alert("Please fill all required fields (Name, Price, Image, and at least one Size)");
+    const validImages = productImages.map(img => img.trim()).filter(Boolean);
+    const primaryImg = validImages[0] || "";
+
+    if (!name || !price || !primaryImg || sizes.length === 0) {
+      return alert("Please fill all required fields (Name, Price, at least one Image, and at least one Size)");
     }
 
     const numPrice = Number(price);
@@ -404,12 +429,10 @@ export default function AdminDashboard() {
       return alert("Sizes must only include standard options: S, M, L, XL");
     }
 
-    if (!isValidHttpUrl(image)) {
-      return alert("Primary Image URL must start with http:// or https://");
-    }
-
-    if (hoverImage && !isValidHttpUrl(hoverImage)) {
-      return alert("Hover Image URL must start with http:// or https://");
+    for (let i = 0; i < validImages.length; i++) {
+      if (!isValidHttpUrl(validImages[i])) {
+        return alert(`Image ${i + 1} URL must start with http:// or https://`);
+      }
     }
 
     if (shopeeUrl && !isValidHttpUrl(shopeeUrl)) {
@@ -438,7 +461,9 @@ export default function AdminDashboard() {
           name,
           price: Math.round(Number(price)),
           displayPrice: `$${Math.round(Number(price))}`,
-          image,
+          image: primaryImg,
+          hoverImage: validImages[1] || "",
+          gallery: validImages,
           category,
           subCategory,
           sizes,
@@ -453,10 +478,8 @@ export default function AdminDashboard() {
           etsyUrl,
           amazonUrl,
           alibabaUrl,
-          hoverImage,
           videoUrl,
           sizeGuideUrl,
-          gallery: gallery.filter(g => g.trim() !== ""),
         });
         showToast("Product updated successfully");
       } else {
@@ -464,7 +487,9 @@ export default function AdminDashboard() {
           name,
           price: Math.round(Number(price)),
           displayPrice: `$${Math.round(Number(price))}`,
-          image,
+          image: primaryImg,
+          hoverImage: validImages[1] || "",
+          gallery: validImages,
           category,
           subCategory,
           sizes,
@@ -479,10 +504,8 @@ export default function AdminDashboard() {
           etsyUrl,
           amazonUrl,
           alibabaUrl,
-          hoverImage,
           videoUrl,
           sizeGuideUrl,
-          gallery: gallery.filter(g => g.trim() !== ""),
         });
         showToast("Product added successfully");
       }
@@ -499,11 +522,9 @@ export default function AdminDashboard() {
     setEditingProductId(null);
     setName("");
     setPrice("");
-    setImage("");
-    setHoverImage("");
+    setProductImages(["", "", "", "", ""]);
     setVideoUrl("");
     setSizeGuideUrl("");
-    setGallery([]);
     setSizes(["M"]);
     setCategory("WOMAN");
     setSubCategory("DRESSES");
@@ -524,11 +545,15 @@ export default function AdminDashboard() {
     setEditingProductId(product.id);
     setName(product.name);
     setPrice(product.price.toString());
-    setImage(product.image);
-    setHoverImage(product.hoverImage || "");
+    const loadedImages: string[] = (product.gallery && product.gallery.length > 0)
+      ? [...product.gallery]
+      : [product.image, product.hoverImage].filter(Boolean) as string[];
+    while (loadedImages.length < 5) {
+      loadedImages.push("");
+    }
+    setProductImages(loadedImages);
     setVideoUrl(product.videoUrl || "");
     setSizeGuideUrl(product.sizeGuideUrl || "");
-    setGallery(product.gallery || []);
     setCategory(product.category);
     setSubCategory(product.subCategory);
     setSizes(product.sizes);
@@ -614,19 +639,19 @@ export default function AdminDashboard() {
       {/* Quick Navigation Anchor Bar */}
       <div className="flex gap-3 pb-6 mb-12 border-b border-heca-primary/10 overflow-x-auto text-[10px] uppercase tracking-widest">
         <a href="#products-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
-          📦 Products ({products.length})
+          Products ({products.length})
         </a>
         <a href="#banner-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
-          🎬 Hero Banner / Slides ({heroSlides.length})
+          Hero Banner / Slides ({heroSlides.length})
         </a>
         <a href="#store-links-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
-          🌐 Store & Marketplace Links
+          Store & Marketplace Links
         </a>
         <a href="#website-settings-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
-          ⚙️ Website Settings & CMS
+          Website Settings & CMS
         </a>
         <a href="#fx-settings-section" className="px-4 py-2 border border-heca-primary/30 hover:border-heca-primary hover:bg-heca-primary/5 transition-colors whitespace-nowrap">
-          💵 Currency & Shipping
+          Currency & Shipping
         </a>
       </div>
 
@@ -768,19 +793,88 @@ export default function AdminDashboard() {
               />
             </div>
 
-            <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
-              <label className="opacity-60">Image URL</label>
-              <input type="text" value={image} onChange={e => setImage(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://images.unsplash.com/..." />
-              <FileUploader onUpload={setImage} label="Or Upload Image" />
+            {/* Multi-Image Product Gallery */}
+            <div className="flex flex-col space-y-4 pt-2 border-t border-heca-primary/10">
+              <div className="flex justify-between items-center text-[10px] uppercase tracking-widest">
+                <span className="font-semibold text-heca-primary">Product Images ({productImages.filter(Boolean).length} uploaded)</span>
+                <span className="opacity-50 text-[9px]">Base 5 Slots</span>
+              </div>
+              <p className="text-[10px] opacity-60 leading-relaxed -mt-2">
+                Gambar 1 adalah cover utama produk. Gambar 2 adalah tampilan saat hover. Anda dapat menambah slot gambar tanpa batas.
+              </p>
+
+              <div className="space-y-4">
+                {productImages.map((imgUrl, idx) => (
+                  <div key={idx} className="p-3 bg-heca-primary/[0.02] border border-heca-primary/15 space-y-2">
+                    <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-mono">
+                      <span className="opacity-70 font-sans">
+                        {idx === 0 
+                          ? "Gambar 1 (Cover Utama) *" 
+                          : idx === 1 
+                          ? "Gambar 2 (Hover / Tampilan Kedua)" 
+                          : `Gambar ${idx + 1}`}
+                      </span>
+                      {idx >= 5 ? (
+                        <button 
+                          type="button" 
+                          onClick={() => removeProductImage(idx)}
+                          className="text-[#D6001C] hover:underline text-[9px] uppercase tracking-wider"
+                        >
+                          Hapus Slot
+                        </button>
+                      ) : (
+                        imgUrl && (
+                          <button 
+                            type="button" 
+                            onClick={() => removeProductImage(idx)}
+                            className="text-[#D6001C] hover:underline text-[9px] uppercase tracking-wider"
+                          >
+                            Kosongkan
+                          </button>
+                        )
+                      )}
+                    </div>
+
+                    <div className="flex gap-3 items-center">
+                      {imgUrl ? (
+                        <div className="w-12 h-16 shrink-0 border border-heca-primary/20 bg-black/5 overflow-hidden relative group">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={imgUrl} alt={`Slot ${idx + 1}`} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-16 shrink-0 border border-dashed border-heca-primary/20 bg-heca-primary/[0.02] flex items-center justify-center text-[9px] opacity-40 font-mono">
+                          {idx + 1}
+                        </div>
+                      )}
+
+                      <div className="flex-1 flex flex-col space-y-1">
+                        <input 
+                          type="text" 
+                          value={imgUrl} 
+                          onChange={e => updateProductImage(idx, e.target.value)} 
+                          className="w-full border-b border-heca-primary/30 py-1.5 outline-none focus:border-heca-primary bg-transparent text-xs" 
+                          placeholder={idx === 0 ? "https://... (Cover Utama)" : "https://..."} 
+                        />
+                        <FileUploader 
+                          onUpload={(url) => updateProductImage(idx, url)} 
+                          label={imgUrl ? "Ganti Gambar" : `Unggah Gambar ${idx + 1}`} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button 
+                type="button" 
+                onClick={addProductImageSlot}
+                className="w-full py-2.5 border border-dashed border-heca-primary/40 hover:border-heca-primary hover:bg-heca-primary/5 text-center text-[10px] uppercase tracking-widest font-semibold transition-all mt-2"
+              >
+                + Tambahkan Gambar
+              </button>
             </div>
 
-            <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
-              <label className="opacity-60">Hover Image URL (Optional)</label>
-              <input type="text" value={hoverImage} onChange={e => setHoverImage(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://images.unsplash.com/..." />
-              <FileUploader onUpload={setHoverImage} label="Or Upload Hover Image" />
-            </div>
-
-            <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
+            <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest pt-2">
               <label className="opacity-60">Product Catwalk Video URL (Optional MP4) <span className="lowercase opacity-50 ml-2">*Recommended: &lt; 10MB .mp4 for optimal mobile performance</span></label>
               <input type="text" value={videoUrl} onChange={e => setVideoUrl(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://example.com/video.mp4" />
               <FileUploader onUpload={setVideoUrl} accept="video/mp4,video/webm" label="Or Upload Video" />
@@ -790,43 +884,6 @@ export default function AdminDashboard() {
               <label className="opacity-60">Custom Size Guide Image URL (Optional)</label>
               <input type="text" value={sizeGuideUrl} onChange={e => setSizeGuideUrl(e.target.value)} className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" placeholder="https://example.com/sizeguide.jpg" />
               <FileUploader onUpload={setSizeGuideUrl} label="Or Upload Size Guide" />
-            </div>
-
-            <div className="flex flex-col space-y-2 text-[10px] uppercase tracking-widest">
-              <label className="opacity-60 flex justify-between items-center">
-                <span>Gallery Images (Extra slides for Quick View)</span>
-                <button type="button" onClick={() => setGallery([...gallery, ""])} className="text-heca-primary font-bold border-b border-heca-primary">+ Add Picture</button>
-              </label>
-              {gallery.map((g, idx) => (
-                <div key={idx} className="flex flex-col space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="text" 
-                      value={g} 
-                      onChange={e => {
-                        const newG = [...gallery];
-                        newG[idx] = e.target.value;
-                        setGallery(newG);
-                      }} 
-                      className="w-full border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs" 
-                      placeholder="https://images.unsplash.com/..." 
-                    />
-                    <button type="button" onClick={() => {
-                      const newG = [...gallery];
-                      newG.splice(idx, 1);
-                      setGallery(newG);
-                    }} className="text-[#D6001C] px-2">X</button>
-                  </div>
-                  <FileUploader 
-                    onUpload={(url) => {
-                      const newG = [...gallery];
-                      newG[idx] = url;
-                      setGallery(newG);
-                    }} 
-                    label="Upload Picture" 
-                  />
-                </div>
-              ))}
             </div>
 
             <div className="flex gap-4">

@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   const session = await verifyCustomerSession(req);
 
   if (!session.authenticated || !session.user) {
-    return NextResponse.json({ authenticated: false }, { status: 401 });
+    return NextResponse.json({ authenticated: false }, { status: 200 });
   }
 
   const adminClient = getSupabaseAdmin();
