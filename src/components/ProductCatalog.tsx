@@ -5,6 +5,18 @@ import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { useProduct, Product, ProductSize } from "@/context/ProductContext";
 import { motion } from "framer-motion";
+import SizeGuideModal from "./SizeGuideModal";
+
+const CATEGORY_TABS = [
+  { id: "ALL", label: "Semua Koleksi", sub: null },
+  { id: "NEWBORN", label: "Newborn (0–12 Bulan)", sub: null },
+  { id: "TODDLER", label: "Toddler / Batita (1–4 Tahun)", sub: null },
+  { id: "BODYSUIT", label: "Bodysuit & Romper", sub: "BODYSUIT" },
+  { id: "PIYAMA", label: "Piyama & Baju Tidur", sub: "PIYAMA" },
+  { id: "LEGGING", label: "Legging & Bawahan", sub: "LEGGING" },
+  { id: "BABY CARE", label: "Baby Care & Essentials", sub: null },
+  { id: "SALE", label: "Promo Spesial", sub: "SPECIAL PRICES" },
+];
 
 function CatalogProductCard({
   product,
@@ -77,9 +89,6 @@ function CatalogProductCard({
     setTouchStartX(null);
   };
 
-  // Determine which image index to open in quick view:
-  // If user is hovering at index 0 and 2nd image is available, the hover image was showing -> open index 1
-  // Otherwise open currentIdx
   const getInitialQuickViewIdx = () => {
     if (isHovered && currentIdx === 0 && images.length > 1) {
       return 1;
@@ -97,16 +106,16 @@ function CatalogProductCard({
 
   const activeImage = images[currentIdx] || images[0];
   const secondImage = images[1] || product.hoverImage;
+  const displayedSlideIdx = isHovered && currentIdx === 0 && images.length > 1 ? 1 : currentIdx;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 50 }}
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.8, ease: "easeOut", delay: (index % 3) * 0.1 }}
-      key={product.id} 
+      viewport={{ once: true, margin: "-30px" }}
+      transition={{ duration: 0.5, ease: "easeOut", delay: (index % 4) * 0.06 }}
       id={`product-${product.id}`}
-      className={`${product.span || "col-span-12 md:col-span-4"} group relative overflow-hidden flex flex-col cursor-pointer select-none`}
+      className="group relative flex flex-col bg-white rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 border border-[#2C2523]/8 hover:border-[#E05A47]/40 hover:shadow-lg transition-all duration-300 cursor-pointer select-none"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
@@ -114,8 +123,9 @@ function CatalogProductCard({
       }}
       onClick={handleCardClick}
     >
-      <div 
-        className={`relative w-full ${product.height || "h-[60vh]"} overflow-hidden bg-[#e0d9d0] cursor-pointer`}
+      {/* Product Image Aspect 3:4 Container */}
+      <div
+        className="relative w-full aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden bg-[#F3EFEA]"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -124,25 +134,25 @@ function CatalogProductCard({
           src={activeImage}
           alt={product.name}
           fill
-          sizes="(max-width: 768px) 100vw, 50vw"
-          loading={index < 3 ? "eager" : "lazy"}
-          priority={index < 3}
-          className={`object-cover object-center transition-all duration-[700ms] ease-out group-hover:scale-105 ${
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          loading={index < 4 ? "eager" : "lazy"}
+          priority={index < 4}
+          className={`object-cover object-center transition-all duration-500 ease-out group-hover:scale-103 ${
             isHovered && currentIdx === 0 && (product.videoUrl || secondImage) ? "opacity-0" : "opacity-100"
           }`}
         />
-        
-        {/* Hover View when at default index 0: Catwalk Video or 2nd Image */}
-        {currentIdx === 0 && (
-          product.videoUrl ? (
+
+        {/* Hover View when at default index 0: Video or 2nd Image */}
+        {currentIdx === 0 &&
+          (product.videoUrl ? (
             <video
               src={product.videoUrl}
               autoPlay
               loop
               muted
               playsInline
-              className={`object-cover object-center absolute inset-0 w-full h-full transition-all duration-[700ms] ease-out ${
-                isHovered ? "opacity-100 scale-105" : "opacity-0 scale-100"
+              className={`object-cover object-center absolute inset-0 w-full h-full transition-all duration-500 ease-out ${
+                isHovered ? "opacity-100 scale-103" : "opacity-0 scale-100"
               }`}
             />
           ) : secondImage ? (
@@ -150,28 +160,27 @@ function CatalogProductCard({
               src={secondImage}
               alt={`${product.name} alternate view`}
               fill
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               loading="lazy"
-              className={`object-cover object-center absolute inset-0 transition-all duration-[700ms] ease-out ${
-                isHovered ? "opacity-100 scale-105" : "opacity-0 scale-100"
+              className={`object-cover object-center absolute inset-0 transition-all duration-500 ease-out ${
+                isHovered ? "opacity-100 scale-103" : "opacity-0 scale-100"
               }`}
             />
-          ) : null
-        )}
+          ) : null)}
 
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500 z-0" />
-        
-        {/* Badges */}
-        {product.isNew && (
-          <div className="absolute top-4 left-4 z-10 bg-white/90 text-black px-2 py-1 text-[10px] uppercase font-serif font-bold tracking-widest shadow-sm">
-            NEW
-          </div>
-        )}
-        {product.discountPercent ? (
-          <div className="absolute top-4 right-4 z-10 bg-[#D6001C] text-white px-2 py-1 text-[10px] uppercase font-bold tracking-widest shadow-sm">
-            SALE -{product.discountPercent}%
-          </div>
-        ) : null}
+        {/* Top Left Badges */}
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1">
+          {product.isNew && (
+            <span className="bg-[#2C2523] text-white px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shadow-xs">
+              BARU
+            </span>
+          )}
+          {product.discountPercent ? (
+            <span className="bg-[#E05A47] text-white px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shadow-xs">
+              -{product.discountPercent}%
+            </span>
+          ) : null}
+        </div>
 
         {/* Geser / Slider Arrows directly on the store card */}
         {hasMultiple && (
@@ -179,27 +188,32 @@ function CatalogProductCard({
             <button
               type="button"
               onClick={prevSlide}
-              aria-label="Previous image"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/85 hover:bg-white text-black flex items-center justify-center shadow-md backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95"
+              aria-label="Gambar sebelumnya"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 hover:bg-white text-[#2C2523] flex items-center justify-center shadow-md backdrop-blur-xs transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-105 active:scale-95 cursor-pointer"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
 
             <button
               type="button"
               onClick={nextSlide}
-              aria-label="Next image"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/85 hover:bg-white text-black flex items-center justify-center shadow-md backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95"
+              aria-label="Gambar berikutnya"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 hover:bg-white text-[#2C2523] flex items-center justify-center shadow-md backdrop-blur-xs transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-105 active:scale-95 cursor-pointer"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
 
-            {/* Slide Dots Indicator */}
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex gap-1.5 transition-opacity duration-300">
+            {/* Counter Pill Top Right */}
+            <div className="absolute top-2.5 right-2.5 z-10 bg-black/55 backdrop-blur-xs text-white px-2 py-0.5 text-[9px] font-mono tracking-wider rounded-full">
+              {displayedSlideIdx + 1}/{images.length}
+            </div>
+
+            {/* Slide Dots Indicator Bottom */}
+            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-10 flex gap-1 bg-black/25 backdrop-blur-2xs px-2 py-1 rounded-full">
               {images.map((_, dotIdx) => (
                 <button
                   key={dotIdx}
@@ -208,31 +222,35 @@ function CatalogProductCard({
                     e.stopPropagation();
                     setCurrentIdx(dotIdx);
                   }}
-                  className={`h-1 rounded-full transition-all ${
-                    (isHovered && currentIdx === 0 && images.length > 1 ? 1 : currentIdx) === dotIdx
-                      ? "w-4 bg-white"
-                      : "w-1 bg-white/40"
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    displayedSlideIdx === dotIdx ? "w-4 bg-white" : "w-1.5 bg-white/55"
                   }`}
                   aria-label={`Slide ${dotIdx + 1}`}
                 />
               ))}
             </div>
-
-            {/* Counter pill */}
-            <div className="absolute top-4 right-4 z-10 bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 text-[9px] font-mono tracking-wider rounded opacity-0 group-hover:opacity-100 transition-opacity">
-              {(isHovered && currentIdx === 0 && images.length > 1 ? 1 : currentIdx) + 1} / {images.length}
-            </div>
           </>
         )}
+      </div>
 
-        {/* Hover Bottom Action Drawer */}
-        <div 
-          className={`absolute bottom-0 left-0 w-full p-4 md:p-6 flex flex-col items-center justify-end bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <div className="flex gap-3 mb-4 text-white">
-            {product.sizes.map((size) => (
+      {/* Product Info Section */}
+      <div className="mt-3 flex-1 flex flex-col justify-between px-1">
+        <div>
+          {/* Category & Material Tag */}
+          <div className="flex items-center justify-between gap-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[#5E8C71] mb-1">
+            <span className="truncate">
+              {product.category} {product.subCategory ? `• ${product.subCategory}` : ""}
+            </span>
+          </div>
+
+          {/* Product Name */}
+          <h3 className="text-xs sm:text-sm font-bold text-[#2C2523] group-hover:text-[#E05A47] transition-colors line-clamp-2 leading-snug mb-2">
+            {product.name}
+          </h3>
+
+          {/* Size Pills (Uniqlo Baby style cm / age sizes) */}
+          <div className="flex flex-wrap gap-1 mb-3">
+            {product.sizes.slice(0, 5).map((size) => (
               <button
                 key={size}
                 type="button"
@@ -240,48 +258,47 @@ function CatalogProductCard({
                   e.stopPropagation();
                   setSelectedSize(size as ProductSize);
                 }}
-                className={`text-xs uppercase tracking-widest border border-white/30 px-3 py-1 transition-colors ${
-                  selectedSize === size ? 'bg-white text-black font-semibold' : 'hover:border-white'
+                className={`text-[9px] sm:text-[10px] font-medium px-2 py-0.5 rounded-md border transition-colors cursor-pointer ${
+                  selectedSize === size
+                    ? "bg-[#2C2523] text-white border-[#2C2523]"
+                    : "bg-[#FAF7F2] text-[#2C2523]/75 border-[#2C2523]/12 hover:border-[#2C2523]"
                 }`}
-                aria-label={`Select size ${size}`}
               >
                 {size}
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Bottom Price & Quick Action */}
+        <div className="pt-2.5 border-t border-[#2C2523]/8 flex items-center justify-between gap-2">
+          <div className="flex flex-col">
+            {product.discountPercent ? (
+              <>
+                <span className="text-[10px] text-[#2C2523]/45 line-through">
+                  {formatPrice(product.price)}
+                </span>
+                <span className="text-xs sm:text-sm font-bold text-[#E05A47]">
+                  {formatPrice(product.price * (1 - product.discountPercent / 100))}
+                </span>
+              </>
+            ) : (
+              <span className="text-xs sm:text-sm font-bold text-[#2C2523]">
+                {formatPrice(product.price)}
+              </span>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onQuickView(product, getInitialQuickViewIdx());
             }}
-            className="w-full bg-white text-black py-3 text-xs uppercase tracking-widest hover:bg-heca-bg transition-colors font-medium"
-            aria-label={`View ${product.name} details`}
+            className="px-3 py-1.5 rounded-full bg-[#FAF7F2] group-hover:bg-[#E05A47] text-[#2C2523] group-hover:text-white text-[10px] sm:text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap"
           >
-            Quick View
+            Detail →
           </button>
-        </div>
-      </div>
-      
-      <div className="mt-4 flex justify-between items-baseline px-2">
-        <h3 className="text-sm font-medium uppercase tracking-wider group-hover:opacity-70 transition-opacity">
-          {product.name}
-        </h3>
-        <div className="flex items-center gap-3">
-          {product.discountPercent ? (
-            <>
-              <span className="text-xs opacity-40 font-serif line-through decoration-heca-primary/50">
-                {formatPrice(product.price)}
-              </span>
-              <span className="text-sm font-bold font-serif text-[#D6001C]">
-                {formatPrice(product.price * (1 - product.discountPercent / 100))}
-              </span>
-            </>
-          ) : (
-            <span className="text-sm opacity-60 font-serif">
-              {formatPrice(product.price)}
-            </span>
-          )}
         </div>
       </div>
     </motion.div>
@@ -290,119 +307,242 @@ function CatalogProductCard({
 
 export default function ProductCatalog() {
   const { openQuickView, formatPrice } = useCart();
-  const { products, isLoading, activeCategory, activeSubCategory, searchQuery, setFilter } = useProduct();
+  const { products, isLoading, activeCategory, activeSubCategory, searchQuery, setFilter, setSearchQuery } = useProduct();
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [selectedSizeFilter, setSelectedSizeFilter] = useState<string | null>(null);
 
-  // Filter products based on active category, subcategory, and search query (case-insensitive)
-  const filteredProducts = products.filter(product => {
-    const matchCategory = product.category.toLowerCase() === activeCategory.toLowerCase();
-    
-    // If there's a search query, it overrides category navigation
-    if (searchQuery.trim() !== "") {
-      const q = searchQuery.toLowerCase();
-      return (
-        product.name.toLowerCase().includes(q) ||
-        product.category.toLowerCase().includes(q) ||
-        product.subCategory.toLowerCase().includes(q)
-      );
-    }
+  // Filter products intelligently
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      // Search query override
+      if (searchQuery.trim() !== "") {
+        const q = searchQuery.toLowerCase();
+        const matchesSearch =
+          product.name.toLowerCase().includes(q) ||
+          product.category.toLowerCase().includes(q) ||
+          product.subCategory.toLowerCase().includes(q) ||
+          (product.description && product.description.toLowerCase().includes(q));
+        if (!matchesSearch) return false;
+      } else {
+        // Category filter ("ALL" matches everything)
+        if (activeCategory && activeCategory.toUpperCase() !== "ALL") {
+          const catMatch =
+            product.category.toLowerCase() === activeCategory.toLowerCase() ||
+            product.subCategory.toLowerCase() === activeCategory.toLowerCase();
+          if (!catMatch) return false;
+        }
 
-    if (!matchCategory) return false;
-    
-    if (activeSubCategory) {
-      if (activeSubCategory === "THE NEW") return !!product.isNew;
-      if (activeSubCategory === "SPECIAL PRICES") return (product.discountPercent ?? 0) > 0;
-      return product.subCategory.toLowerCase() === activeSubCategory.toLowerCase();
-    }
-    return true; // if no subcategory selected, show all for that category
-  });
+        // Subcategory filter
+        if (activeSubCategory) {
+          if (activeSubCategory === "THE NEW") {
+            if (!product.isNew) return false;
+          } else if (activeSubCategory === "SPECIAL PRICES") {
+            if ((product.discountPercent ?? 0) <= 0) return false;
+          } else {
+            const subUpper = activeSubCategory.toUpperCase();
+            const matchesSub =
+              product.subCategory.toUpperCase().includes(subUpper) ||
+              product.category.toUpperCase().includes(subUpper) ||
+              product.name.toUpperCase().includes(subUpper);
+            if (!matchesSub) return false;
+          }
+        }
+      }
 
-  // Get unique subcategories for the active category
-  const dynamicSubCategories = Array.from(
-    new Set(products.filter(p => p.category.toLowerCase() === activeCategory.toLowerCase()).map(p => p.subCategory))
-  ).filter(Boolean);
+      // Size filter pill
+      if (selectedSizeFilter) {
+        const hasSize = product.sizes.some(
+          (s) => s.toLowerCase() === selectedSizeFilter.toLowerCase()
+        );
+        if (!hasSize) return false;
+      }
+
+      return true;
+    });
+  }, [products, activeCategory, activeSubCategory, searchQuery, selectedSizeFilter]);
+
+  // Available unique sizes across products for quick filtering
+  const availableSizes = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => p.sizes?.forEach((s) => set.add(s)));
+    return Array.from(set);
+  }, [products]);
 
   return (
-    <section id="catalog" className="w-full bg-heca-bg text-heca-primary px-4 md:px-8 py-20 font-sans min-h-[80vh]">
-      <div className="max-w-7xl mx-auto mb-16 text-center">
-        <h2 className="text-3xl md:text-5xl font-serif mb-4 uppercase tracking-widest">
-          The Archive
-        </h2>
-        <p className="text-sm uppercase tracking-widest opacity-60">
-          {searchQuery.trim() !== "" ? `SEARCH RESULTS FOR "${searchQuery}"` : `${activeCategory} ${activeSubCategory ? `— ${activeSubCategory}` : "COLLECTION"}`}
-        </p>
-      </div>
+    <section id="catalog" className="w-full bg-[#FAF7F2] text-[#2C2523] px-4 sm:px-6 lg:px-10 py-10 md:py-16 font-sans min-h-[70vh]">
+      <div className="max-w-[1440px] mx-auto">
+        
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="bg-[#E9F0EB] text-[#3D6B52] text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full">
+                OEKO-TEX® STANDARD 100
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-[#2C2523]/55">
+                • {filteredProducts.length} Produk Tersedia
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#2C2523]">
+              {searchQuery.trim() !== ""
+                ? `Hasil Pencarian: "${searchQuery}"`
+                : activeCategory === "ALL" && !activeSubCategory
+                ? "Katalog Pakaian & Perlengkapan Bayi"
+                : `${activeCategory === "ALL" ? "Koleksi" : activeCategory} ${
+                    activeSubCategory ? `— ${activeSubCategory}` : ""
+                  }`}
+            </h2>
+          </div>
 
-      {/* Mobile Horizontal Subcategory Pills */}
-      {searchQuery.trim() === "" && dynamicSubCategories.length > 0 && (
-        <div className="md:hidden flex overflow-x-auto gap-3 pb-4 mb-8 -mx-4 px-4 scrollbar-hide snap-x">
-          <button 
-            onClick={() => setFilter(activeCategory, null)}
-            className={`flex-shrink-0 snap-start border px-4 py-1.5 text-[10px] uppercase tracking-widest transition-colors rounded-full ${
-              !activeSubCategory ? "bg-heca-primary text-heca-bg border-heca-primary" : "border-heca-primary/30 hover:border-heca-primary"
-            }`}
-          >
-            ALL {activeCategory}
-          </button>
-          {dynamicSubCategories.map(subCat => (
-            <button 
-              key={subCat}
-              onClick={() => setFilter(activeCategory, subCat)}
-              className={`flex-shrink-0 snap-start border px-4 py-1.5 text-[10px] uppercase tracking-widest transition-colors rounded-full ${
-                activeSubCategory === subCat ? "bg-heca-primary text-heca-bg border-heca-primary" : "border-heca-primary/30 hover:border-heca-primary"
+          <div className="flex items-center gap-3">
+            {(activeCategory !== "ALL" || activeSubCategory || searchQuery || selectedSizeFilter) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFilter("ALL", null);
+                  setSearchQuery("");
+                  setSelectedSizeFilter(null);
+                }}
+                className="text-xs font-semibold text-[#E05A47] hover:underline cursor-pointer"
+              >
+                Reset Filter ×
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsSizeGuideOpen(true)}
+              className="px-4 py-2 rounded-full bg-white border border-[#2C2523]/15 hover:border-[#2C2523] text-xs font-semibold transition-colors cursor-pointer"
+            >
+              📏 Tabel Ukuran Bayi (cm)
+            </button>
+          </div>
+        </div>
+
+        {/* Category Filter Tabs (Scrollable on HP/TAB, Wrap on Desktop) */}
+        <div className="flex overflow-x-auto gap-2 pb-3 mb-4 scrollbar-hide">
+          {CATEGORY_TABS.map((tab) => {
+            const isSelected =
+              (tab.id === "ALL" && activeCategory === "ALL" && !activeSubCategory) ||
+              (tab.sub && activeSubCategory === tab.sub) ||
+              (!tab.sub && tab.id !== "ALL" && activeCategory.toUpperCase() === tab.id && !activeSubCategory);
+
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  if (tab.sub) {
+                    setFilter("ALL", tab.sub);
+                  } else {
+                    setFilter(tab.id, null);
+                  }
+                }}
+                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                  isSelected
+                    ? "bg-[#2C2523] text-white shadow-xs"
+                    : "bg-white border border-[#2C2523]/10 text-[#2C2523]/75 hover:border-[#2C2523]/30 hover:text-[#2C2523]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Quick Filter by Baby Size (cm) */}
+        {availableSizes.length > 0 && (
+          <div className="flex items-center overflow-x-auto gap-1.5 pb-4 mb-6 border-b border-[#2C2523]/10 scrollbar-hide">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#2C2523]/50 mr-2 shrink-0">
+              Filter Ukuran:
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedSizeFilter(null)}
+              className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
+                selectedSizeFilter === null
+                  ? "bg-[#E05A47] text-white"
+                  : "bg-white border border-[#2C2523]/10 text-[#2C2523]/70 hover:border-[#2C2523]"
               }`}
             >
-              {subCat}
+              Semua Ukuran
             </button>
-          ))}
-        </div>
-      )}
+            {availableSizes.map((sz) => (
+              <button
+                key={sz}
+                type="button"
+                onClick={() => setSelectedSizeFilter(selectedSizeFilter === sz ? null : sz)}
+                className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
+                  selectedSizeFilter === sz
+                    ? "bg-[#E05A47] text-white"
+                    : "bg-white border border-[#2C2523]/10 text-[#2C2523]/70 hover:border-[#2C2523]"
+                }`}
+              >
+                {sz}
+              </button>
+            ))}
+          </div>
+        )}
 
-      {isLoading ? (
-        <div className="grid grid-cols-12 gap-4 md:gap-8 max-w-[1600px] mx-auto">
-          {[1, 2, 3, 4, 5, 6].map((idx) => (
-            <div key={idx} className="col-span-12 md:col-span-4 h-[60vh] bg-heca-primary/5 animate-pulse flex flex-col justify-end p-6">
-              <div className="h-4 bg-heca-primary/10 w-3/4 mb-2"></div>
-              <div className="h-3 bg-heca-primary/10 w-1/4"></div>
-            </div>
-          ))}
-        </div>
-      ) : products.length === 0 ? (
-        <div className="w-full py-28 flex flex-col items-center justify-center space-y-4 text-center px-4">
-          <span className="text-[10px] uppercase tracking-[0.3em] opacity-40 font-mono">
-            New Archive
-          </span>
-          <h3 className="font-serif text-3xl md:text-5xl font-light tracking-wide uppercase">
-            Collection In Curation
-          </h3>
-          <p className="text-xs uppercase tracking-widest opacity-60 max-w-md leading-relaxed">
-            The archive is currently empty and being refreshed with genuine contemporary pieces. Please check back soon or use the admin panel to add products.
-          </p>
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="w-full h-64 flex flex-col items-center justify-center space-y-4 text-heca-primary/50">
-          <p className="font-serif text-2xl md:text-3xl font-light tracking-wide text-center px-4 text-heca-primary/60">
-            No collection items available in this category.
-          </p>
-          <button 
-            onClick={() => setFilter("WOMAN", null)} 
-            className="text-xs uppercase tracking-widest border-b border-heca-primary/50 hover:text-heca-primary transition-colors py-1"
-          >
-            Explore All Archives
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-12 gap-4 md:gap-8 max-w-[1600px] mx-auto">
-          {filteredProducts.map((product, i) => (
-            <CatalogProductCard
-              key={product.id}
-              product={product}
-              index={i}
-              formatPrice={formatPrice}
-              onQuickView={openQuickView}
-            />
-          ))}
-        </div>
-      )}
+        {/* Product Grid: 2 Columns on HP, 3 Columns on TAB, 4 Columns on DESKTOP */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-2xl p-3 border border-[#2C2523]/5 animate-pulse flex flex-col"
+              >
+                <div className="w-full aspect-[3/4] bg-[#F3EFEA] rounded-xl mb-3" />
+                <div className="h-3 bg-[#F3EFEA] w-1/2 rounded mb-2" />
+                <div className="h-4 bg-[#F3EFEA] w-3/4 rounded mb-3" />
+                <div className="h-4 bg-[#F3EFEA] w-1/3 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="w-full py-20 bg-white rounded-3xl border border-[#2C2523]/10 flex flex-col items-center justify-center space-y-3 text-center px-4">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[#E05A47]">
+              HECA BABY CATALOG
+            </span>
+            <h3 className="font-serif text-2xl md:text-4xl font-bold text-[#2C2523]">
+              Koleksi Sedang Disiapkan
+            </h3>
+            <p className="text-xs text-[#2C2523]/65 max-w-md leading-relaxed">
+              Katalog produk bayi sedang diperbarui. Silakan tambahkan produk melalui halaman Admin.
+            </p>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="w-full py-16 bg-white rounded-3xl border border-[#2C2523]/10 flex flex-col items-center justify-center space-y-4 text-center px-4">
+            <p className="font-serif text-xl md:text-2xl font-bold text-[#2C2523]">
+              Tidak ada produk yang cocok dengan filter ini.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setFilter("ALL", null);
+                setSearchQuery("");
+                setSelectedSizeFilter(null);
+              }}
+              className="px-6 py-2.5 rounded-full bg-[#2C2523] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#E05A47] transition-colors cursor-pointer"
+            >
+              Tampilkan Semua Produk Bayi
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+            {filteredProducts.map((product, i) => (
+              <CatalogProductCard
+                key={product.id}
+                product={product}
+                index={i}
+                formatPrice={formatPrice}
+                onQuickView={openQuickView}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <SizeGuideModal isOpen={isSizeGuideOpen} onClose={() => setIsSizeGuideOpen(false)} />
     </section>
   );
 }

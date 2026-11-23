@@ -6,29 +6,21 @@ export default function SplashScreen() {
   const [stage, setStage] = useState<"initial" | "fade-in" | "expand" | "slide-up" | "done">("initial");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && localStorage.getItem("heca_splash_seen")) {
+    if (typeof window !== "undefined" && localStorage.getItem("heca_baby_splash_seen")) {
       setStage("done");
       return;
     }
 
-    // Sequence of animations
     const sequence = async () => {
-      // 1. Brief pause on blank screen
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 150));
       setStage("fade-in");
-
-      // 2. Expand letter spacing
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 650));
       setStage("expand");
-
-      // 3. Slide up to reveal
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 900));
       setStage("slide-up");
-
-      // 4. Unmount completely
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 800));
       setStage("done");
-      localStorage.setItem("heca_splash_seen", "true");
+      localStorage.setItem("heca_baby_splash_seen", "true");
     };
 
     sequence();
@@ -38,19 +30,35 @@ export default function SplashScreen() {
 
   return (
     <div 
-      className={`fixed inset-0 z-[999] bg-heca-bg flex items-center justify-center transition-transform duration-1000 ease-[cubic-bezier(0.85,0,0.15,1)] ${
+      className={`fixed inset-0 z-[999] bg-[#FAF7F2] flex flex-col items-center justify-center transition-transform duration-700 ease-[cubic-bezier(0.85,0,0.15,1)] ${
         stage === "slide-up" ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <h1 
-        className={`font-serif text-5xl md:text-7xl font-black text-heca-primary uppercase transition-all duration-[1200ms] ease-out ${
-          stage === "initial" ? "opacity-0 tracking-normal" :
-          stage === "fade-in" ? "opacity-100 tracking-normal" :
-          "opacity-100 tracking-[0.4em] md:tracking-[0.6em] ml-[0.4em] md:ml-[0.6em]"
+      <div className="flex items-center gap-3">
+        <h1 
+          className={`font-serif text-4xl sm:text-5xl md:text-7xl font-bold text-[#2C2523] transition-all duration-1000 ease-out ${
+            stage === "initial" ? "opacity-0 scale-95" :
+            stage === "fade-in" ? "opacity-100 scale-100" :
+            "opacity-100 tracking-[0.08em]"
+          }`}
+        >
+          Baby Gemoy
+        </h1>
+        <span
+          className={`bg-[#E05A47] text-white text-xs md:text-base font-bold uppercase tracking-widest px-3.5 py-1 rounded-full transition-all duration-700 ${
+            stage === "initial" ? "opacity-0 scale-75" : "opacity-100 scale-100"
+          }`}
+        >
+          HECA
+        </span>
+      </div>
+      <p
+        className={`mt-4 text-xs uppercase tracking-[0.25em] text-[#2C2523]/60 transition-opacity duration-700 ${
+          stage === "initial" ? "opacity-0" : "opacity-100"
         }`}
       >
-        HECA
-      </h1>
+        Organic Cotton & Gentle Baby Essentials
+      </p>
     </div>
   );
 }

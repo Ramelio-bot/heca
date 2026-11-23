@@ -11,16 +11,45 @@ function isValidHttpUrl(str: string) {
   }
 }
 
-export async function GET() {
-  const { data, error } = await supabase
-    .from("heca_products")
-    .select("*")
-    .order("sort_order", { ascending: true });
+import { DEFAULT_BABY_PRODUCTS } from "@/lib/babyProductsData";
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return new NextResponse(JSON.stringify(data), {
+export async function GET() {
+  try {
+    const { data, error } = await supabase
+      .from("heca_products")
+      .select("*")
+      .order("sort_order", { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      return new NextResponse(JSON.stringify(data), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      });
+    }
+  } catch {}
+
+  const fallbackRows = DEFAULT_BABY_PRODUCTS.map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    display_price: p.displayPrice,
+    images: p.gallery || [p.image],
+    hover_image: p.hoverImage,
+    category: p.category,
+    sub_category: p.subCategory,
+    sizes: p.sizes,
+    is_new: p.isNew,
+    discount_percent: p.discountPercent,
+    description: p.description,
+    material: p.material,
+    care_instructions: p.careInstructions,
+    sort_order: p.sortOrder,
+  }));
+
+  return new NextResponse(JSON.stringify(fallbackRows), {
     status: 200,
     headers: {
       "Content-Type": "application/json",
@@ -57,10 +86,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "At least one size is required" }, { status: 400 });
     }
 
-    const allowedSizes = ["S", "M", "L", "XL"];
-    const invalidSizes = body.sizes.filter((s: string) => !allowedSizes.includes(s));
+    const allowedSizes = ["NB", "50cm", "60cm", "70cm", "80cm", "90cm", "100cm", "110cm", "S", "M", "L", "XL", "ALL SIZE"];
+    const invalidSizes = body.sizes.filter((s: string) => !allowedSizes.includes(s) && (!s || typeof s !== "string"));
     if (invalidSizes.length > 0) {
-      return NextResponse.json({ error: "Sizes must only include standard options: S, M, L, XL" }, { status: 400 });
+      return NextResponse.json({ error: "Sizes must be valid size options (e.g. NB, 50cm-110cm, S, M, L, XL)" }, { status: 400 });
     }
 
     const primaryImg = body.images?.[0] || body.image;

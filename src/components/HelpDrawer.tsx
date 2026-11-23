@@ -8,125 +8,123 @@ import { useProduct } from "@/context/ProductContext";
 export default function HelpDrawer() {
   const { isHelpOpen, setIsHelpOpen } = useCart();
   const { storeLinks } = useProduct();
-  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [openAccordion, setOpenAccordion] = useState<string | null>("size");
 
   if (!isHelpOpen) return null;
 
   const toggleAccordion = (id: string) => {
-    setOpenAccordion(prev => prev === id ? null : id);
+    setOpenAccordion((prev) => (prev === id ? null : id));
   };
 
   const faqs = [
     {
-      id: "shipping",
-      title: "SHIPPING & DELIVERY",
-      content: "All orders are processed within 1-2 business days. Standard shipping typically takes 2-4 business days for domestic orders. You will receive a tracking link once your order has been dispatched."
-    },
-    {
-      id: "returns",
-      title: "RETURNS & REFUNDS",
-      content: "We accept returns within 7 days of the delivery date. Items must be unworn, unwashed, and in original condition with tags attached. Refunds will be processed back to the original payment method."
-    },
-    {
       id: "size",
-      title: "SIZE GUIDE",
-      content: "Our sizes follow standard international sizing. For a precise fit, please refer to the specific measurements provided on each product page or contact our Client Care team for personalized sizing advice."
+      title: "CARA MEMILIH UKURAN BAYI (50 CM – 110 CM)",
+      content:
+        "Ukuran pakaian HECA Baby mengacu pada tinggi badan si kecil dalam sentimeter: 50cm (Newborn 0-2 bulan, ±3kg), 60cm (3-5 bulan, ±6kg), 70cm (6-11 bulan, ±9kg), 80cm (12-18 bulan, ±11kg), 90cm (2 tahun, ±13kg), 100cm (3 tahun, ±16kg), dan 110cm (4 tahun, ±19kg). Jika ragu di antara dua ukuran, pilih 1 ukuran lebih besar.",
     },
     {
-      id: "orders",
-      title: "ORDER STATUS",
-      content: "You can track your order directly through the marketplace platform (Shopee, Tokopedia, TikTok Shop, Etsy, Amazon, Alibaba) where you made the purchase, using the tracking number provided in your transaction details."
-    }
+      id: "fabric",
+      title: "KEAMANAN BAHAN & LABEL DI LUAR (ANTI-GATAL)",
+      content:
+        "Seluruh produk HECA Baby menggunakan 100% katun organik bersertifikat Oeko-Tex® Standard 100 yang bebas zat kimia berbahaya. Khusus ukuran Newborn & Baby (50-80cm), label pakaian dijahit di bagian luar agar tidak menggesek kulit sensitif bayi.",
+    },
+    {
+      id: "shipping",
+      title: "PENGIRIMAN & GARANSI TUKAR UKURAN",
+      content:
+        "Pesanan diproses dalam 1x24 jam kerja. Kami menyediakan garansi tukar ukuran (size exchange) dalam 7 hari setelah barang diterima selama pakaian belum dicuci dan tag masih terpasang.",
+    },
+    {
+      id: "care",
+      title: "CARA MENCUCI PAKAIAN KATUN ORGANIK BAYI",
+      content:
+        "Disarankan mencuci dengan air suhu normal atau hangat (maks 40°C) menggunakan deterjen khusus bayi yang lembut. Jangan gunakan pemutih klorin agar serat katun tetap lembut dan awet.",
+    },
   ];
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-  
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (touchStart === null) return;
-    const diff = e.targetTouches[0].clientX - touchStart;
-    // Swipe right to close
-    if (diff > 50) {
-      setIsHelpOpen(false);
-      setTouchStart(null);
-    }
-  };
-
-  const onTouchEnd = () => setTouchStart(null);
 
   return (
     <>
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/40 z-[60] transition-opacity duration-300"
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[60] transition-opacity"
         onClick={() => setIsHelpOpen(false)}
         aria-hidden="true"
       />
 
-      {/* Drawer */}
-      <div 
-        className="fixed top-0 right-0 h-full w-[90vw] md:w-[450px] bg-heca-bg text-heca-primary z-[70] flex flex-col font-sans transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
-        style={{ transform: isHelpOpen ? 'translateX(0)' : 'translateX(100%)' }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 md:px-10 border-b border-heca-primary/20">
-          <h2 className="text-sm font-serif uppercase tracking-widest">Help / Client Care</h2>
-          <button 
+      <div className="fixed top-0 right-0 h-full w-full sm:w-[460px] bg-[#FAF7F2] text-[#2C2523] z-[70] flex flex-col font-sans shadow-2xl">
+        <div className="flex justify-between items-center p-6 border-b border-[#2C2523]/10">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#E05A47] block">
+              BABY GEMOY HECA CARE
+            </span>
+            <h2 className="text-lg font-serif font-bold text-[#2C2523]">
+              Pusat Bantuan & Panduan Ibu
+            </h2>
+          </div>
+          <button
+            type="button"
             onClick={() => setIsHelpOpen(false)}
-            className="hover:opacity-60 transition-opacity p-2 -mr-2"
-            aria-label="Close Help Drawer"
+            className="w-9 h-9 rounded-full bg-white border border-[#2C2523]/10 flex items-center justify-center hover:bg-[#2C2523]/5 transition-colors cursor-pointer"
+            aria-label="Tutup Bantuan"
           >
-            <X size={24} strokeWidth={1} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-10">
-          <p className="text-xs uppercase tracking-widest opacity-70 leading-loose mb-12">
-            Find answers to common questions below. If you need further assistance, our Client Care team is available directly via WhatsApp or email.
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <p className="text-xs text-[#2C2523]/75 leading-relaxed">
+            Temukan jawaban seputar panduan ukuran tinggi badan bayi, keamanan bahan katun organik, serta layanan konsultasi ukuran gratis bersama tim HECA Baby.
           </p>
 
-          <div className="flex flex-col mb-12">
+          <div className="space-y-2.5">
             {faqs.map((faq) => (
-              <div key={faq.id} className="border-b border-heca-primary/20">
-                <button 
+              <div
+                key={faq.id}
+                className="bg-white rounded-2xl border border-[#2C2523]/10 overflow-hidden"
+              >
+                <button
+                  type="button"
                   onClick={() => toggleAccordion(faq.id)}
-                  className="w-full flex justify-between items-center py-6 text-left hover:opacity-70 transition-opacity"
+                  className="w-full flex justify-between items-center p-4 text-left hover:bg-[#FAF7F2]/50 transition-colors cursor-pointer"
                 >
-                  <span className="text-xs uppercase tracking-widest font-medium">{faq.title}</span>
-                  {openAccordion === faq.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  <span className="text-xs font-bold text-[#2C2523] pr-3">
+                    {faq.title}
+                  </span>
+                  {openAccordion === faq.id ? (
+                    <ChevronUp size={16} className="shrink-0 text-[#E05A47]" />
+                  ) : (
+                    <ChevronDown size={16} className="shrink-0 text-[#2C2523]/50" />
+                  )}
                 </button>
-                <div 
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${openAccordion === faq.id ? 'max-h-96 opacity-100 pb-6' : 'max-h-0 opacity-0'}`}
-                >
-                  <p className="text-xs tracking-wider leading-loose opacity-70 text-justify">
+                {openAccordion === faq.id && (
+                  <div className="px-4 pb-4 pt-1 text-xs text-[#2C2523]/75 leading-relaxed border-t border-[#2C2523]/5">
                     {faq.content}
-                  </p>
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
 
-          <div className="bg-white p-6 border border-heca-primary/10 flex flex-col space-y-6">
-            <h3 className="text-sm font-serif uppercase tracking-widest text-center">Contact Us</h3>
-            <a 
-              href={storeLinks?.clientService || "mailto:care@heca.com"} 
+          <div className="bg-white p-5 rounded-2xl border border-[#2C2523]/10 flex flex-col space-y-3">
+            <h3 className="text-sm font-serif font-bold text-center text-[#2C2523]">
+              Butuh Konsultasi Ukuran Si Kecil?
+            </h3>
+            <p className="text-xs text-center text-[#2C2523]/65">
+              Beritahu usia, berat (kg), dan tinggi (cm) si kecil kepada tim kami:
+            </p>
+            <a
+              href={storeLinks?.clientService || "mailto:care@heca.com"}
               target={storeLinks?.clientService?.startsWith("http") ? "_blank" : undefined}
               rel={storeLinks?.clientService?.startsWith("http") ? "noopener noreferrer" : undefined}
-              className="w-full bg-[#25D366] text-white py-4 text-center text-xs uppercase tracking-[0.2em] hover:bg-[#20b858] transition-colors"
+              className="w-full bg-[#25D366] hover:bg-[#20b858] text-white py-3.5 rounded-full text-center text-xs font-bold uppercase tracking-wider transition-colors"
             >
-              Client Care Service
+              Chat WhatsApp / Layanan Ibu
             </a>
-            <a 
-              href="mailto:care@heca.com" 
-              className="w-full bg-heca-primary text-heca-bg py-4 text-center text-xs uppercase tracking-[0.2em] hover:opacity-90 transition-opacity"
+            <a
+              href="mailto:care@heca.com"
+              className="w-full bg-[#2C2523] hover:bg-[#2C2523]/90 text-white py-3.5 rounded-full text-center text-xs font-semibold uppercase tracking-wider transition-opacity"
             >
-              Email Client Care (care@heca.com)
+              Email: care@heca.com
             </a>
           </div>
         </div>

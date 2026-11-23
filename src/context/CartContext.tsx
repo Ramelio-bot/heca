@@ -36,7 +36,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quickViewInitialIndex, setQuickViewInitialIndex] = useState<number>(0);
-  const [currency, setCurrency] = useState<Currency>("USD");
+  const [currency, setCurrency] = useState<Currency>("IDR");
   const [fxRate, setFxRate] = useState<number>(15500);
 
   useEffect(() => {

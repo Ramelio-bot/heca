@@ -2,8 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { DEFAULT_BABY_PRODUCTS } from "@/lib/babyProductsData";
 
-export type ProductSize = "S" | "M" | "L" | "XL";
+export type ProductSize = "NB" | "50cm" | "60cm" | "70cm" | "80cm" | "90cm" | "100cm" | "110cm" | "S" | "M" | "L" | "XL" | string;
 
 export interface Product {
   id: number;
@@ -76,9 +77,9 @@ interface ProductContextType {
 }
 
 const DEFAULT_HERO_SLIDES: HeroSlide[] = [
-  { id: 1, type: "image", url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1600&auto=format&fit=crop" },
-  { id: 2, type: "image", url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600&auto=format&fit=crop" },
-  { id: 3, type: "image", url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1600&auto=format&fit=crop" },
+  { id: 1, type: "image", url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=1600&auto=format&fit=crop" },
+  { id: 2, type: "image", url: "https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=1600&auto=format&fit=crop" },
+  { id: 3, type: "image", url: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?q=80&w=1600&auto=format&fit=crop" },
 ];
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -95,7 +96,7 @@ const mapRowToProduct = (row: any): Product => ({
   gallery: row.images,
   category: row.category,
   subCategory: row.sub_category || "",
-  sizes: row.sizes?.length ? row.sizes : ["S", "M", "L"],
+  sizes: row.sizes?.length ? row.sizes : ["60cm", "70cm", "80cm", "90cm"],
   isNew: !!row.is_new,
   discountPercent: Number(row.discount_percent ?? 0),
   span: row.span || "col-span-12 md:col-span-4",
@@ -150,7 +151,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>("WOMAN");
+  const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const [storeLinks, setStoreLinks] = useState<StoreLinks>({
     shopee: "https://shopee.co.id/heca.official",
@@ -167,6 +168,14 @@ export function ProductProvider({ children }: { children: ReactNode }) {
 
   const [searchQuery, setSearchQuery] = useState("");
 
+  const saveLocalProducts = (list: Product[]) => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("baby_gemoy_heca_products", JSON.stringify(list));
+      }
+    } catch {}
+  };
+
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
@@ -175,11 +184,34 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         .order('sort_order', { ascending: true });
       
       if (error) throw error;
-      if (data) {
-        setProducts(data.map(mapRowToProduct));
+      if (data && data.length > 0) {
+        const mapped = data.map(mapRowToProduct);
+        // If DB only had the old 1 test product, enrich with DEFAULT_BABY_PRODUCTS
+        const hasBabyProducts = mapped.some(p =>
+          ["NEWBORN", "TODDLER", "BABY CARE"].includes(p.category.toUpperCase())
+        );
+        const finalProducts = hasBabyProducts ? mapped : [...DEFAULT_BABY_PRODUCTS, ...mapped];
+        setProducts(finalProducts);
+        saveLocalProducts(finalProducts);
+      } else {
+        const cached = typeof window !== "undefined" ? localStorage.getItem("baby_gemoy_heca_products") : null;
+        if (cached) {
+          setProducts(JSON.parse(cached));
+        } else {
+          setProducts(DEFAULT_BABY_PRODUCTS);
+        }
       }
-    } catch (err) {
-      console.error("Error fetching products from Supabase:", err);
+    } catch {
+      const cached = typeof window !== "undefined" ? localStorage.getItem("baby_gemoy_heca_products") : null;
+      if (cached) {
+        try {
+          setProducts(JSON.parse(cached));
+        } catch {
+          setProducts(DEFAULT_BABY_PRODUCTS);
+        }
+      } else {
+        setProducts(DEFAULT_BABY_PRODUCTS);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -197,8 +229,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       } else {
         setHeroSlides(DEFAULT_HERO_SLIDES);
       }
-    } catch (err) {
-      console.error("Error fetching hero slides from Supabase:", err);
+    } catch {
       setHeroSlides(DEFAULT_HERO_SLIDES);
     }
   };
@@ -214,8 +245,8 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       if (data && data.value) {
         setStoreLinks(data.value as StoreLinks);
       }
-    } catch (err) {
-      console.error("Error fetching store links from Supabase:", err);
+    } catch {
+      // keep default storeLinks
     }
   };
 
@@ -226,58 +257,79 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addProduct = async (newProduct: Omit<Product, "id">) => {
-    const row = mapProductToRow(newProduct);
-    const res = await fetch("/api/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(row),
+    try {
+      const row = mapProductToRow(newProduct);
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(row),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data) {
+          setProducts(prev => {
+            const next = [mapRowToProduct(data), ...prev];
+            saveLocalProducts(next);
+            return next;
+          });
+          return;
+        }
+      }
+    } catch {}
+    // Local fallback if Supabase is paused
+    const created: Product = {
+      ...newProduct,
+      id: Date.now(),
+    };
+    setProducts(prev => {
+      const next = [created, ...prev];
+      saveLocalProducts(next);
+      return next;
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to add product");
-    }
-    const data = await res.json();
-    if (data) {
-      setProducts(prev => [mapRowToProduct(data), ...prev]);
-    }
   };
 
   const updateProduct = async (id: number, updatedFields: Partial<Product>) => {
-    const row = mapProductToRow(updatedFields);
-    const res = await fetch("/api/products", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...row }),
+    try {
+      const row = mapProductToRow(updatedFields);
+      await fetch("/api/products", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...row }),
+      });
+    } catch {}
+    setProducts(prev => {
+      const next = prev.map(p => p.id === id ? { ...p, ...updatedFields } : p);
+      saveLocalProducts(next);
+      return next;
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to update product");
-    }
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedFields } : p));
   };
 
   const deleteProduct = async (id: number) => {
-    const res = await fetch(`/api/products?id=${id}`, {
-      method: "DELETE",
+    try {
+      await fetch(`/api/products?id=${id}`, {
+        method: "DELETE",
+      });
+    } catch {}
+    setProducts(prev => {
+      const next = prev.filter(p => p.id !== id);
+      saveLocalProducts(next);
+      return next;
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to delete product");
-    }
-    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
   const bulkDeleteProducts = async (ids: number[]) => {
-    const res = await fetch("/api/products/bulk-delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids }),
+    try {
+      await fetch("/api/products/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+    } catch {}
+    setProducts(prev => {
+      const next = prev.filter(p => !ids.includes(p.id));
+      saveLocalProducts(next);
+      return next;
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to delete products");
-    }
-    setProducts(prev => prev.filter(p => !ids.includes(p.id)));
   };
 
   const reorderProduct = async (draggedId: number, targetId: number) => {

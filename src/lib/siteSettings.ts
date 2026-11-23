@@ -44,33 +44,33 @@ export interface SiteSettings {
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   announcement: {
-    enabled: false,
-    text: "New Season — The Archive Is Being Refreshed",
-    bg_color: "#111111",
-    text_color: "#EBE6DF",
-    link: null,
+    enabled: true,
+    text: "BABY GEMOY HECA — 100% Katun Organik Lembut & Bersertifikat Oeko-Tex® Aman Untuk Kulit Sensitif Bayi (Usia 0–4 Tahun)",
+    bg_color: "#2C2523",
+    text_color: "#FAF7F2",
+    link: "#catalog",
   },
   site_meta: {
-    title: "HECA | High-Fashion & Minimalist Editorial",
-    description: "HECA is a modern luxury fashion brand inspired by minimalist editorial style.",
-    keywords: "HECA, Luxury Fashion, Minimalist, Editorial, Designer Clothes",
-    og_image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=80",
+    title: "Baby Gemoy HECA | Pakaian & Perlengkapan Bayi Katun Organik (0–4 Tahun)",
+    description: "Baby Gemoy HECA menghadirkan koleksi pakaian bayi newborn & toddler (50cm - 110cm) berbahan 100% katun organik lembut, breathable Air-Mesh, label di luar anti-gatal, dan aman untuk kulit sensitif si kecil.",
+    keywords: "Baby Gemoy HECA, HECA Baby, Pakaian Bayi, Baju Bayi Newborn, Bodysuit Bayi, Piyama Anak, Legging Bayi, Katun Organik Bayi",
+    og_image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=1200&q=80",
   },
   home_content: {
-    hero_title: "THE NEW",
-    hero_subtitle: "Scroll Down",
-    archive_title: "The Archive",
-    archive_subtitle: "Collection In Curation",
-    newsletter_title: "Join The Archive",
-    newsletter_text: "Subscribe to receive updates on new arrivals, special offers and other discount information.",
+    hero_title: "Kenyamanan Sejak Hari Pertama Bersama Baby Gemoy HECA",
+    hero_subtitle: "Dirancang khusus mengikuti tumbuh kembang si kecil dari Newborn (50 cm) hingga Batita (110 cm) dengan jahitan rata dan label di luar.",
+    archive_title: "Koleksi Esensial Baby Gemoy HECA",
+    archive_subtitle: "Newborn (0–12 Bulan) & Toddler (1–4 Tahun)",
+    newsletter_title: "Bergabung dengan Komunitas Ibu & Baby Gemoy HECA",
+    newsletter_text: "Dapatkan panduan ukuran tumbuh kembang bayi, tips perawatan kain katun organik, dan penawaran spesial koleksi terbaru Baby Gemoy HECA.",
   },
   coming_soon: {
-    title: "Coming Soon",
-    text: "We are currently curating this experience. Please check back later for updates.",
+    title: "Segera Hadir di Baby Gemoy HECA",
+    text: "Kami sedang menyiapkan koleksi pakaian dan perlengkapan lembut terbaru untuk si kecil. Nantikan segera.",
   },
   footer: {
-    tagline: "HECA",
-    copyright: "© 2026 HECA. ALL RIGHTS RESERVED.",
+    tagline: "BABY GEMOY HECA",
+    copyright: "© 2026 BABY GEMOY HECA. HAK CIPTA DILINDUNGI.",
   },
 };
 

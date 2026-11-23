@@ -4,7 +4,6 @@ import React from "react";
 import Link from "next/link";
 import { useProduct } from "@/context/ProductContext";
 import { useCart } from "@/context/CartContext";
-
 import { HomeContentSetting, FooterSetting } from "@/lib/siteSettings";
 
 interface FooterProps {
@@ -16,9 +15,9 @@ export default function Footer({ homeContent, footerSettings }: FooterProps) {
   const { storeLinks, setFilter } = useProduct();
   const { setIsHelpOpen } = useCart();
 
-  const handleCategoryClick = (e: React.MouseEvent, category: string) => {
+  const handleCategoryClick = (e: React.MouseEvent, category: string, sub: string | null = null) => {
     e.preventDefault();
-    setFilter(category, null);
+    setFilter(category, sub);
     setTimeout(() => {
       document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -30,75 +29,129 @@ export default function Footer({ homeContent, footerSettings }: FooterProps) {
   };
 
   return (
-    <footer className="w-full bg-[#EBE6DF] text-heca-primary pt-24 pb-12 px-6 md:px-12 font-sans selection:bg-heca-primary selection:text-[#EBE6DF]">
-      <div className="max-w-7xl mx-auto flex flex-col space-y-24">
+    <footer className="w-full bg-[#F3EFEA] text-[#2C2523] pt-16 pb-10 px-4 sm:px-6 lg:px-10 font-sans border-t border-[#2C2523]/10">
+      <div className="max-w-[1440px] mx-auto flex flex-col space-y-14">
         
-        {/* Top Section: Newsletter & Tagline */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
-          <div className="max-w-md w-full">
-            <h3 className="text-sm font-medium uppercase tracking-widest mb-6">
-              {homeContent?.newsletter_title || "Join The Archive"}
-            </h3>
-            <p className="text-xs opacity-60 mb-8 leading-relaxed">
-              {homeContent?.newsletter_text || "Subscribe to receive updates on new arrivals, special offers and other discount information."}
-            </p>
-            <div className="relative group">
-              <input 
-                type="email" 
-                placeholder="YOUR EMAIL ADDRESS" 
-                className="w-full bg-transparent border-b border-heca-primary/30 py-3 text-xs uppercase tracking-widest outline-none focus:border-heca-primary transition-colors placeholder:opacity-40"
-              />
-              <button className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                Subscribe
-              </button>
+        {/* Top Section: Brand Promise & Newsletter */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 bg-white rounded-3xl p-6 sm:p-10 border border-[#2C2523]/8">
+          <div className="max-w-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="font-serif text-2xl font-bold text-[#2C2523]">Baby Gemoy</span>
+              <span className="bg-[#E05A47] text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full">
+                HECA
+              </span>
             </div>
+            <h3 className="text-lg sm:text-xl font-serif font-bold text-[#2C2523] mb-2">
+              {homeContent?.newsletter_title || "Komunitas Ibu & Tumbuh Kembang Si Kecil"}
+            </h3>
+            <p className="text-xs text-[#2C2523]/70 leading-relaxed">
+              {homeContent?.newsletter_text ||
+                "Dapatkan panduan memilih ukuran pakaian bayi sesuai tinggi badan (50cm–110cm), tips mencuci pakaian katun organik, serta promo eksklusif bulanan."}
+            </p>
           </div>
-          
-          <div className="text-left md:text-right hidden md:block">
-            <h1 className="font-serif text-5xl md:text-7xl font-black tracking-tighter uppercase opacity-10">
-              {footerSettings?.tagline || "HECA"}
-            </h1>
+
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row gap-2.5 min-w-[280px] sm:min-w-[380px]">
+            <input
+              type="email"
+              placeholder="Masukkan alamat email Ibu/Ayah..."
+              className="flex-1 bg-[#FAF7F2] border border-[#2C2523]/15 rounded-full px-5 py-3 text-xs outline-none focus:border-[#E05A47] transition-colors"
+            />
+            <button
+              type="button"
+              className="bg-[#2C2523] hover:bg-[#E05A47] text-white text-xs font-semibold uppercase tracking-wider px-6 py-3 rounded-full transition-colors cursor-pointer"
+            >
+              Berlangganan
+            </button>
           </div>
         </div>
 
-        {/* Middle Section: Links Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-[10px] uppercase tracking-widest font-medium">
-          <div className="flex flex-col space-y-4">
-            <h4 className="opacity-40 mb-2 font-bold">Shop</h4>
-            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "WOMAN")} className="hover:opacity-60 transition-opacity">Woman</a>
-            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "MAN")} className="hover:opacity-60 transition-opacity">Man</a>
-            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "KIDS")} className="hover:opacity-60 transition-opacity">Kids</a>
-            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "BEAUTY")} className="hover:opacity-60 transition-opacity">Beauty</a>
+        {/* Middle Section: Links Grid (Responsive 2 cols on HP, 4 cols on TAB & DESKTOP) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-xs">
+          <div className="flex flex-col space-y-3">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#E05A47] mb-1">
+              Kategori Usia & Produk
+            </h4>
+            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "NEWBORN", null)} className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Newborn (0–12 Bulan | 50–70cm)
+            </a>
+            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "TODDLER", null)} className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Toddler / Batita (1–4 Tahun | 80–110cm)
+            </a>
+            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "ALL", "BODYSUIT")} className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Bodysuit & Romper Air-Mesh
+            </a>
+            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "ALL", "PIYAMA")} className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Piyama Kancing Pengait
+            </a>
+            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "ALL", "LEGGING")} className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Celana Legging & Bawahan
+            </a>
+            <a href="#catalog" onClick={(e) => handleCategoryClick(e, "BABY CARE", null)} className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Baby Care & Aksesoris
+            </a>
           </div>
-          <div className="flex flex-col space-y-4">
-            <h4 className="opacity-40 mb-2 font-bold">Help</h4>
-            <a href={storeLinks.clientService || "#"} onClick={!storeLinks.clientService ? handleHelpClick : undefined} target="_blank" rel="noopener noreferrer" className="hover:opacity-60 transition-opacity">Client Service</a>
-            <a href="#" onClick={handleHelpClick} className="hover:opacity-60 transition-opacity">Shipping & Delivery</a>
-            <a href="#" onClick={handleHelpClick} className="hover:opacity-60 transition-opacity">Returns</a>
-            <a href="#" onClick={handleHelpClick} className="hover:opacity-60 transition-opacity">Size Guide</a>
+
+          <div className="flex flex-col space-y-3">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#5E8C71] mb-1">
+              Panduan & Layanan Ibu
+            </h4>
+            <a href="#" onClick={handleHelpClick} className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Panduan Ukuran Bayi (50–110 cm)
+            </a>
+            <a href="#" onClick={handleHelpClick} className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Standar Katun Organik Oeko-Tex®
+            </a>
+            <a href="#" onClick={handleHelpClick} className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Info Pengiriman & Penukaran Size
+            </a>
+            <a href={storeLinks.clientService || "#"} onClick={!storeLinks.clientService ? handleHelpClick : undefined} target="_blank" rel="noopener noreferrer" className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Konsultasi Ukuran via WhatsApp
+            </a>
           </div>
-          <div className="flex flex-col space-y-4">
-            <h4 className="opacity-40 mb-2 font-bold">Company</h4>
-            <Link href="/coming-soon" className="hover:opacity-60 transition-opacity">About Us</Link>
-            <Link href="/coming-soon" className="hover:opacity-60 transition-opacity">Offices</Link>
-            <Link href="/coming-soon" className="hover:opacity-60 transition-opacity">Stores</Link>
-            <Link href="/coming-soon" className="hover:opacity-60 transition-opacity">Careers</Link>
+
+          <div className="flex flex-col space-y-3">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#3B6E8C] mb-1">
+              Official Marketplace
+            </h4>
+            <a href={storeLinks.shopee || "#"} target="_blank" rel="noopener noreferrer" className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Shopee Official Store
+            </a>
+            <a href={storeLinks.tokopedia || "#"} target="_blank" rel="noopener noreferrer" className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Tokopedia Official Store
+            </a>
+            <a href={storeLinks.tiktok || "#"} target="_blank" rel="noopener noreferrer" className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              TikTok Shop HECA Baby
+            </a>
+            <Link href="/coming-soon" className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Lokasi Toko & Pop-Up
+            </Link>
           </div>
-          <div className="flex flex-col space-y-4">
-            <h4 className="opacity-40 mb-2 font-bold">Social</h4>
-            <a href={storeLinks.instagram || "#"} target="_blank" rel="noopener noreferrer" className="hover:opacity-60 transition-opacity">Instagram</a>
-            <a href={storeLinks.tiktok || "#"} target="_blank" rel="noopener noreferrer" className="hover:opacity-60 transition-opacity">TikTok</a>
-            <a href={storeLinks.pinterest || "#"} target="_blank" rel="noopener noreferrer" className="hover:opacity-60 transition-opacity">Pinterest</a>
-            <a href={storeLinks.spotify || "#"} target="_blank" rel="noopener noreferrer" className="hover:opacity-60 transition-opacity">Spotify</a>
+
+          <div className="flex flex-col space-y-3">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#8C6527] mb-1">
+              Ikuti HECA Baby
+            </h4>
+            <a href={storeLinks.instagram || "#"} target="_blank" rel="noopener noreferrer" className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Instagram
+            </a>
+            <a href={storeLinks.tiktok || "#"} target="_blank" rel="noopener noreferrer" className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              TikTok
+            </a>
+            <a href={storeLinks.pinterest || "#"} target="_blank" rel="noopener noreferrer" className="text-[#2C2523]/75 hover:text-[#2C2523] transition-colors">
+              Pinterest Lookbook
+            </a>
+            <Link href="/admin" className="text-[#2C2523]/40 hover:text-[#2C2523] transition-colors pt-2">
+              Admin Portal
+            </Link>
           </div>
         </div>
 
         {/* Bottom Section: Copyright */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-heca-primary/10 text-[9px] uppercase tracking-widest opacity-40">
-          <p>{footerSettings?.copyright || `© ${new Date().getFullYear()} HECA. ALL RIGHTS RESERVED.`}</p>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-[#2C2523]/10 text-[11px] text-[#2C2523]/55">
+          <p>{footerSettings?.copyright || `© ${new Date().getFullYear()} HECA BABY & KIDS. HAK CIPTA DILINDUNGI.`}</p>
           <div className="flex space-x-6">
-            <a href="#" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
-            <a href="#" className="hover:opacity-100 transition-opacity">Terms of Use</a>
+            <a href="#" onClick={handleHelpClick} className="hover:text-[#2C2523] transition-colors">Kebijakan Privasi</a>
+            <a href="#" onClick={handleHelpClick} className="hover:text-[#2C2523] transition-colors">Syarat & Ketentuan</a>
           </div>
         </div>
 

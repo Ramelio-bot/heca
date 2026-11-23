@@ -90,9 +90,9 @@ export default function AdminDashboard() {
   // Form States
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("WOMAN");
+  const [category, setCategory] = useState("NEWBORN");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [subCategory, setSubCategory] = useState("DRESSES");
+  const [subCategory, setSubCategory] = useState("BODYSUIT");
   const [isAddingSubCategory, setIsAddingSubCategory] = useState(false);
   const [price, setPrice] = useState("");
   const [productImages, setProductImages] = useState<string[]>(["", "", "", "", ""]);
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
   };
   const [videoUrl, setVideoUrl] = useState("");
   const [sizeGuideUrl, setSizeGuideUrl] = useState("");
-  const [sizes, setSizes] = useState<ProductSize[]>(["M"]);
+  const [sizes, setSizes] = useState<ProductSize[]>(["60cm", "70cm", "80cm"]);
   const [isNew, setIsNew] = useState(false);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [description, setDescription] = useState("");
@@ -423,10 +423,10 @@ export default function AdminDashboard() {
       return alert("Discount percent must be a number between 0 and 100");
     }
 
-    const validSizes: ProductSize[] = ["S", "M", "L", "XL"];
+    const validSizes: ProductSize[] = ["NB", "50cm", "60cm", "70cm", "80cm", "90cm", "100cm", "110cm", "ALL SIZE", "S", "M", "L", "XL"];
     const invalidSizes = sizes.filter(s => !validSizes.includes(s));
     if (invalidSizes.length > 0) {
-      return alert("Sizes must only include standard options: S, M, L, XL");
+      return alert("Sizes must include valid baby/apparel sizes (50cm-110cm, NB, ALL SIZE, S, M, L, XL)");
     }
 
     for (let i = 0; i < validImages.length; i++) {
@@ -525,9 +525,9 @@ export default function AdminDashboard() {
     setProductImages(["", "", "", "", ""]);
     setVideoUrl("");
     setSizeGuideUrl("");
-    setSizes(["M"]);
-    setCategory("WOMAN");
-    setSubCategory("DRESSES");
+    setSizes(["60cm", "70cm", "80cm"]);
+    setCategory("NEWBORN");
+    setSubCategory("BODYSUIT");
     setIsNew(false);
     setDiscountPercent(0);
     setDescription("");
@@ -627,8 +627,8 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex justify-between items-end border-b border-heca-primary/20 pb-6 mb-8">
         <div>
-          <h1 className="text-4xl font-serif tracking-widest uppercase">HECA</h1>
-          <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 mt-2">Admin Dashboard / Store & Catalog Management</p>
+          <h1 className="text-3xl md:text-4xl font-serif tracking-wide">Baby Gemoy <span className="text-[#E05A47] font-bold">HECA</span></h1>
+          <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 mt-2">Admin Dashboard / Baby Store & Catalog Management</p>
         </div>
         <div className="flex gap-6 text-[10px] uppercase tracking-widest">
           <Link href="/" className="hover:opacity-60 transition-opacity">View Store</Link>
@@ -716,7 +716,7 @@ export default function AdminDashboard() {
                     className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs uppercase" 
                   >
                     <option value="" disabled>Select Category</option>
-                    {Array.from(new Set([...products.map(p => p.category), category])).filter(Boolean).map(cat => (
+                    {Array.from(new Set(["NEWBORN", "TODDLER", "BABY CARE", ...products.map(p => p.category), category])).filter(Boolean).map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                     <option value="ADD_NEW" className="font-bold">+ ADD NEW CATEGORY...</option>
@@ -762,7 +762,7 @@ export default function AdminDashboard() {
                     className="border-b border-heca-primary/30 py-2 outline-none focus:border-heca-primary bg-transparent text-xs uppercase" 
                   >
                     <option value="" disabled>Select Sub-Category</option>
-                    {Array.from(new Set([...products.filter(p => p.category === category).map(p => p.subCategory), subCategory])).filter(Boolean).map(sub => (
+                    {Array.from(new Set(["BODYSUIT", "PIYAMA", "LEGGING", "ATASAN", "LUARAN", "ESSENTIALS", ...products.filter(p => p.category === category).map(p => p.subCategory), subCategory])).filter(Boolean).map(sub => (
                       <option key={sub} value={sub}>{sub}</option>
                     ))}
                     <option value="ADD_NEW" className="font-bold">+ ADD NEW SUB-CATEGORY...</option>
@@ -965,13 +965,13 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex flex-col space-y-3 text-[10px] uppercase tracking-widest">
-              <label className="opacity-60">Available Sizes</label>
-              <div className="flex gap-3">
-                {(["S", "M", "L", "XL"] as ProductSize[]).map(size => (
+              <label className="opacity-60">Available Sizes (Baby Height cm / Standard)</label>
+              <div className="flex flex-wrap gap-2">
+                {(["50cm", "60cm", "70cm", "80cm", "90cm", "100cm", "110cm", "ALL SIZE", "NB", "S", "M", "L", "XL"] as ProductSize[]).map(size => (
                   <button 
                     key={size} type="button" 
                     onClick={() => handleSizeToggle(size)}
-                    className={`border px-4 py-2 transition-colors ${sizes.includes(size) ? "bg-heca-primary text-white border-heca-primary" : "border-heca-primary/30 hover:border-heca-primary"}`}
+                    className={`border px-3 py-2 transition-colors ${sizes.includes(size) ? "bg-heca-primary text-white border-heca-primary font-bold" : "border-heca-primary/30 hover:border-heca-primary"}`}
                   >
                     {size}
                   </button>

@@ -293,29 +293,61 @@ export default function QuickViewDrawer() {
                 </div>
               )}
             
-            <div className="flex flex-col space-y-6 flex-1">
+            <div className="flex flex-col space-y-5 flex-1">
               <div>
-                <h1 className="text-2xl font-serif tracking-widest uppercase mb-2">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="bg-[#E9F0EB] text-[#3D6B52] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+                    {selectedProduct.category} {selectedProduct.subCategory ? `• ${selectedProduct.subCategory}` : ""}
+                  </span>
+                  <span className="bg-[#FDF6E4] text-[#8C6527] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+                    Oeko-Tex® Aman Untuk Bayi
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#2C2523] mb-1.5">
                   {selectedProduct.name}
                 </h1>
-                <p className="text-xs uppercase tracking-widest opacity-60">
-                  {formatPrice(selectedProduct.price)}
-                </p>
+                <div className="flex items-center gap-3">
+                  {selectedProduct.discountPercent ? (
+                    <>
+                      <span className="text-xs text-[#2C2523]/45 line-through">
+                        {formatPrice(selectedProduct.price)}
+                      </span>
+                      <span className="text-base sm:text-lg font-bold text-[#E05A47]">
+                        {formatPrice(selectedProduct.price * (1 - selectedProduct.discountPercent / 100))}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-base sm:text-lg font-bold text-[#2C2523]">
+                      {formatPrice(selectedProduct.price)}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Size Selector */}
-              <div>
-                <h3 className="text-[10px] uppercase tracking-widest opacity-40 mb-3 font-bold">Select Size</h3>
-                <div className="flex gap-2">
-                  {(selectedProduct.sizes && selectedProduct.sizes.length > 0 ? selectedProduct.sizes : ["S", "M", "L"]).map((sz) => (
+              <div className="bg-white p-4 rounded-2xl border border-[#2C2523]/10">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-[11px] uppercase tracking-wider text-[#2C2523]/70 font-bold">
+                    Pilih Ukuran (Tinggi Badan Bayi)
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsSizeGuideOpen(true)}
+                    className="text-[11px] font-semibold text-[#E05A47] hover:underline cursor-pointer"
+                  >
+                    📏 Panduan Ukuran (cm)
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(selectedProduct.sizes && selectedProduct.sizes.length > 0 ? selectedProduct.sizes : ["60cm", "70cm", "80cm", "90cm"]).map((sz) => (
                     <button
                       key={sz}
                       type="button"
                       onClick={() => setSelectedSize(sz)}
-                      className={`w-10 h-10 border text-xs tracking-widest flex items-center justify-center transition-all ${
+                      className={`px-3.5 py-2 rounded-xl border text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
                         selectedSize === sz
-                          ? "border-heca-primary bg-heca-primary text-heca-bg font-bold scale-105"
-                          : "border-heca-primary/30 text-heca-primary hover:border-heca-primary"
+                          ? "border-[#2C2523] bg-[#2C2523] text-white shadow-xs"
+                          : "border-[#2C2523]/15 bg-[#FAF7F2] text-[#2C2523] hover:border-[#2C2523]"
                       }`}
                     >
                       {sz}
@@ -326,50 +358,49 @@ export default function QuickViewDrawer() {
 
               {selectedProduct.description && (
                 <div>
-                  <h3 className="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Description</h3>
-                  <p className="text-xs leading-relaxed opacity-80 whitespace-pre-wrap">
+                  <h3 className="text-[11px] uppercase tracking-wider text-[#2C2523]/55 mb-1.5 font-bold">
+                    Deskripsi & Keunggulan Produk
+                  </h3>
+                  <p className="text-xs leading-relaxed text-[#2C2523]/80 whitespace-pre-wrap">
                     {selectedProduct.description}
                   </p>
                 </div>
               )}
 
-              {selectedProduct.material && (
-                <div>
-                  <h3 className="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Composition</h3>
-                  <p className="text-xs uppercase tracking-widest opacity-80">
-                    {selectedProduct.material}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-white p-3.5 rounded-xl border border-[#2C2523]/8">
+                  <h3 className="text-[10px] uppercase tracking-wider text-[#5E8C71] mb-1 font-bold">
+                    Material & Bahan
+                  </h3>
+                  <p className="text-xs text-[#2C2523]/80">
+                    {selectedProduct.material || "100% Organic Combed Cotton (Hypoallergenic & Breathable)"}
                   </p>
                 </div>
-              )}
 
-              {selectedProduct.careInstructions && (
-                <div>
-                  <h3 className="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Care</h3>
-                  <p className="text-xs uppercase tracking-widest opacity-80">
-                    {selectedProduct.careInstructions}
+                <div className="bg-white p-3.5 rounded-xl border border-[#2C2523]/8">
+                  <h3 className="text-[10px] uppercase tracking-wider text-[#3B6E8C] mb-1 font-bold">
+                    Petunjuk Pencucian
+                  </h3>
+                  <p className="text-xs text-[#2C2523]/80">
+                    {selectedProduct.careInstructions || "Cuci lembut maks 40°C, gunakan deterjen bayi, jangan gunakan pemutih."}
                   </p>
                 </div>
-              )}
+              </div>
 
-              <div className="mt-auto pt-10 pb-8 flex flex-col gap-3">
+              <div className="mt-auto pt-4 pb-6 flex flex-col gap-2.5">
                 <button 
-                  onClick={() => setIsPaypalCheckoutOpen(true)}
-                  className="w-full py-4 bg-heca-primary text-heca-bg text-xs uppercase tracking-[0.2em] font-semibold hover:bg-heca-primary/90 transition-all flex items-center justify-center gap-2 shadow-sm"
-                >
-                  <span>Checkout with PayPal</span>
-                  <span className="opacity-50 text-[10px] font-normal">· Instant Order</span>
-                </button>
-                <button 
+                  type="button"
                   onClick={handlePurchase}
-                  className="w-full py-3.5 border border-heca-primary/40 text-heca-primary bg-transparent text-[10px] uppercase tracking-[0.2em] hover:bg-heca-primary/5 transition-colors"
+                  className="w-full py-4 rounded-full bg-[#E05A47] hover:bg-[#c94b39] text-white text-xs uppercase tracking-wider font-bold transition-all shadow-md cursor-pointer"
                 >
-                  Purchase via Marketplace (Shopee / Tokopedia / TikTok / Etsy / Amazon / Alibaba)
+                  Beli via Official Marketplace (Shopee / Tokopedia / TikTok)
                 </button>
                 <button 
-                  onClick={() => setIsSizeGuideOpen(true)}
-                  className="w-full py-2 text-heca-primary/60 text-[10px] uppercase tracking-[0.15em] hover:text-heca-primary transition-colors text-center"
+                  type="button"
+                  onClick={() => setIsPaypalCheckoutOpen(true)}
+                  className="w-full py-3.5 rounded-full bg-[#2C2523] hover:bg-[#2C2523]/90 text-white text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  View Size Guide
+                  <span>Checkout Langsung (PayPal / Kartu)</span>
                 </button>
               </div>
             </div>
