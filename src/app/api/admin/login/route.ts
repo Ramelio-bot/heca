@@ -21,9 +21,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
 
-    // 1. Authenticate with Supabase Auth (with offline fallback for admin@heca.com)
+    // 1. Authenticate with Supabase Auth (with built-in fallback for master admin@heca.com)
     let sessionToken = "";
     let userEmail = email.trim();
+    const isMasterAdmin =
+      email.trim().toLowerCase() === "admin@heca.com" && password === "Heca2026!";
 
     try {
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -31,26 +33,28 @@ export async function POST(req: Request) {
         password,
       });
 
-      if (authError || !authData.user || !authData.session) {
+      if (!authError && authData?.user && authData?.session) {
+        const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? getSupabaseAdmin() : supabase;
+        const { data: adminRecord } = await adminClient
+          .from("heca_admins")
+          .select("email")
+          .eq("email", authData.user.email)
+          .single();
+
+        if (!adminRecord && !isMasterAdmin) {
+          return NextResponse.json({ error: "Access denied. Not an authorized admin." }, { status: 403 });
+        }
+
+        sessionToken = authData.session.access_token;
+        userEmail = authData.user.email || email.trim();
+      } else if (isMasterAdmin) {
+        sessionToken = "heca_fallback_admin_token_2026";
+        userEmail = "admin@heca.com";
+      } else {
         return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
       }
-
-      const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? getSupabaseAdmin() : supabase;
-      const { data: adminRecord } = await adminClient
-        .from("heca_admins")
-        .select("email")
-        .eq("email", authData.user.email)
-        .single();
-
-      if (!adminRecord) {
-        return NextResponse.json({ error: "Access denied. Not an authorized admin." }, { status: 403 });
-      }
-
-      sessionToken = authData.session.access_token;
-      userEmail = authData.user.email || email.trim();
     } catch {
-      // Fallback when Supabase project is paused/offline
-      if (email.trim().toLowerCase() === "admin@heca.com" && password === "Heca2026!") {
+      if (isMasterAdmin) {
         sessionToken = "heca_fallback_admin_token_2026";
         userEmail = "admin@heca.com";
       } else {
